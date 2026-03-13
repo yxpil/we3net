@@ -1,0 +1,26 @@
+{
+  "name": "yxpillow-anline",
+  "version": "1.0.0",
+  "description": "YXPillow AnLine 项目",
+  "main": "Src/mian.js",
+  "scripts": {
+    "we3net": "npx electron Src/mian.js",
+    "we3net-dev": "npx electron Src/mian.js --dev",
+    "electron": "npx electron Src/mian.js",
+    "electron-dev": "npx electron Src/mian.js --dev",
+    "sync": "node sync-repos.js",
+    "sync:install-hook": "node sync-repos.js --install-hook",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "better-sqlite3": "^12.6.2",
+    "date-fns": "^3.6.0",
+    "mysql2": "^3.17.3"
+  },
+  "devDependencies": {
+    "electron": "^27.0.0"
+  }
+}

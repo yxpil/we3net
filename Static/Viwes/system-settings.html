@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统设置</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: "SF Pro Text", "Arial", sans-serif;
+            background: #ffffff;
+            padding: 32px;
+            color: #333333;
+            line-height: 1.6;
+        }
+        
+        .page-header {
+            margin-bottom: 32px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .page-header h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #000000;
+            margin-bottom: 8px;
+        }
+        
+        .page-description {
+            font-size: 14px;
+            color: #666666;
+        }
+        
+        .settings-section {
+            margin-bottom: 32px;
+        }
+        
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #000000;
+            margin-bottom: 16px;
+        }
+        
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+        
+        .setting-info h4 {
+            font-size: 14px;
+            font-weight: 500;
+            color: #000000;
+            margin-bottom: 4px;
+        }
+        
+        .setting-info p {
+            font-size: 12px;
+            color: #666666;
+        }
+        
+        .save-button {
+            background: #000000;
+            color: #ffffff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+        
+        .save-button:hover {
+            background: #333333;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <h2>系统设置</h2>
+        <p class="page-description">配置系统参数和高级选项</p>
+    </div>
+    
+    <div class="settings-section">
+        <h3 class="section-title">常规设置</h3>
+        <div class="setting-item">
+            <div class="setting-info">
+                <h4>开机自启动</h4>
+                <p>系统启动时自动运行应用</p>
+            </div>
+            <div class="setting-control">
+                <input type="checkbox" checked>
+            </div>
+        </div>
+        
+        <div class="setting-item">
+            <div class="setting-info">
+                <h4>自动更新</h4>
+                <p>自动检查并安装更新</p>
+            </div>
+            <div class="setting-control">
+                <input type="checkbox" checked>
+            </div>
+        </div>
+    </div>
+    
+    <div class="settings-section">
+        <h3 class="section-title">性能设置</h3>
+        <div class="setting-item">
+            <div class="setting-info">
+                <h4>硬件加速</h4>
+                <p>使用GPU加速界面渲染</p>
+            </div>
+            <div class="setting-control">
+                <input type="checkbox" checked>
+            </div>
+        </div>
+    </div>
+    
+    <button class="save-button" onclick="saveSettings()">保存设置</button>
+    
+    <script>
+        function saveSettings() {
+            alert('系统设置已保存！');
+        }
+    </script>
+</body>
+</html>

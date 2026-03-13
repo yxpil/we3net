@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ALinet-starting</title>
+  <style>
+    /* 极简黑白样式 - 适配小窗口 */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "SF Pro Text", "Arial", sans-serif;
+    }
+
+    body {
+      width: 100vw;
+      height: 100vh;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: #333333;
+      overflow: hidden;
+      padding: 20px;
+    }
+
+    .loader {
+      width: 32px;  /* 更小的加载动画 */
+      height: 32px;
+      border: 2px solid #e0e0e0;
+      border-top: 2px solid #333333;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 16px;
+    }
+
+    .progress-text {
+      font-size: 13px;  /* 更小的字体 */
+      font-weight: 400;
+      letter-spacing: 0.3px;
+      margin-bottom: 4px;
+      text-align: center;
+      line-height: 1.3;
+      max-width: 200px;  /* 限制文本宽度 */
+    }
+
+    .version {
+      font-size: 10px;  /* 更小的版本号 */
+      color: #999999;
+      position: absolute;
+      bottom: 12px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* 超小窗口适配 */
+    @media (max-width: 300px) {
+      .loader {
+        width: 24px;
+        height: 24px;
+      }
+      .progress-text {
+        font-size: 11px;
+        max-width: 150px;
+      }
+      .version {
+        font-size: 9px;
+      }
+    }
+  </style>
+
+</head>
+<body>
+<div class="loader"></div>
+<div class="progress-text" id="progressText">加载中...</div>
+<div class="version">v1.0.0</div>
+<script src="../Script/electron-loading.js"></script>
+</body>
+</html>

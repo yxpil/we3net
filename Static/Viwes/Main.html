@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WE3net</title>
+    
+    <!-- 样式组件 -->
+    <link rel="stylesheet" href="../CSS/modern-pill-components.css">
+    <link rel="stylesheet" href="../CSS/window-controls.css">
+    <link rel="stylesheet" href="../CSS/sidebar-layout.css">
+    
+    <!-- 动态主题样式 - 初始为空，由JavaScript动态设置 -->
+    <link rel="stylesheet" href="" id="theme-stylesheet">
+</head>
+<body>
+    <!-- 窗口控制栏 -->
+    <div class="window-header">
+        <div class="window-title">
+            <h1>WE3net</h1>
+            <span class="version">v1.0.0</span>
+        </div>
+        <div class="window-controls">
+            <button class="window-btn minimize" id="minimize-btn" title="最小化"></button>
+            <button class="window-btn maximize" id="maximize-btn" title="最大化/还原"></button>
+            <button class="window-btn close" id="close-btn" title="关闭"></button>
+        </div>
+    </div>
+
+    <!-- 主内容容器 -->
+    <div class="main-container">
+        <!-- 侧边栏导航 -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>WE3net</h2>
+            </div>
+            <nav class="sidebar-nav">
+            <div class="nav-item active" data-page="personal-settings">
+                <img src="../Svgs/MenuIcon-peizhi-heise.svg" class="nav-icon" alt="个人设置">
+                个人设置
+            </div>
+            <div class="nav-item" data-page="nearby-messages">
+                <img src="../Svgs/MenuIcon-xiaofangxuncha-heise.svg" class="nav-icon" alt="附近消息">
+                附近消息
+            </div>
+            <div class="nav-item" data-page="local-video">
+                <img src="../Svgs/MenuIcon-shebeisheshijiankong-heise.svg" class="nav-icon" alt="本机视频">
+                本机视频
+            </div>
+            <div class="nav-item" data-page="local-images">
+                <img src="../Svgs/MenuIcon-pingmiantumiaodian-heise.svg" class="nav-icon" alt="本机图文">
+                本机图文
+            </div>
+            <div class="nav-item" data-page="friend-list">
+                <img src="../Svgs/MenuIcon-renyuanguanli-heise.svg" class="nav-icon" alt="好友列表">
+                好友列表
+            </div>
+            <div class="nav-item" data-page="system-settings">
+                <img src="../Svgs/MenuIcon-peizhi-heise_1.svg" class="nav-icon" alt="系统设置">
+                系统设置
+            </div>
+            <div class="nav-item" data-page="theme-settings">
+                <img src="../Svgs/MenuIcon-gexinghua-heise.svg" class="nav-icon" alt="主题设置">
+                主题设置
+            </div>
+            <div class="nav-item" data-page="friend-auth">
+                <img src="../Svgs/MenuIcon-quanxianguanli-heise.svg" class="nav-icon" alt="好友认证">
+                好友认证
+            </div>
+            <div class="nav-item" data-page="network-settings">
+                <img src="../Svgs/MenuIcon-shebeiliandong-heise.svg" class="nav-icon" alt="网络设置">
+                网络设置
+            </div>
+            <div class="nav-item" data-page="plugin-management">
+                <img src="../Svgs/MenuIcon-biaozhunshujutuisong-heise.svg" class="nav-icon" alt="插件管理">
+                插件管理
+            </div>
+            <div class="nav-item" data-page="chat-server">
+                <img src="../Svgs/MenuIcon-xiaoxituisong-heise.svg" class="nav-icon" alt="聊天服务器">
+                聊天服务器
+            </div>
+            <div class="nav-item" data-page="system-info">
+                <img src="../Svgs/MenuIcon-rizhiguanli-heise.svg" class="nav-icon" alt="系统信息">
+                系统信息
+            </div>
+        </nav>
+        </div>
+
+        <!-- 右侧内容区域 -->
+        <div class="content-area">
+            <iframe id="content-frame" src="personal-settings.html" frameborder="0"></iframe>
+        </div>
+    </div>
+
+               
+    <!-- 功能组件 -->
+    <script src="../Script/electron-loading.js"></script>
+    <script src="../Script/window-controls.js"></script>
+    <script src="../Script/sidebar-navigation.js"></script>
+    <script src="../Script/main-functions.js"></script>
+    
+    <!-- 主题管理 -->
+    <script>
+        /**
+         * 主题管理系统
+         * 负责处理主题更新和应用
+         */
+        class ThemeManager {
+            constructor() {
+                this.currentTheme = null;
+                this.init();
+            }
+            
+            /**
+             * 初始化主题管理
+             */
+            async init() {
+                // 监听来自iframe的主题更新消息
+                window.addEventListener('message', this.handleThemeMessage.bind(this));
+                
+                // 加载当前主题
+                await this.loadCurrentTheme();
+                
+                // 定期刷新主题（防止其他标签页修改）
+                setInterval(() => this.loadCurrentTheme(), 5000);
+            }
+            
+            /**
+             * 处理主题消息
+             */
+            handleThemeMessage(event) {
+                // 由于iframe和主页面在同一域名下，放宽来源验证
+                console.log('收到消息:', event.data);
+                
+                const data = event.data;
+                if (data.type === 'theme-update') {
+                    console.log('应用主题更新:', data.theme);
+                    // 强制应用主题，跳过比较检查
+                    this.currentTheme = null; // 重置当前主题，强制重新应用
+                    this.applyTheme(data.theme);
+                }
+            }
+            
+            /**
+             * 加载当前主题
+             */
+            async loadCurrentTheme() {
+                try {
+                    // 尝试多种方式连接，适配Electron和浏览器环境
+                    const endpoints = [
+                        'http://127.0.0.1:5726/theme/current',
+                        'http://localhost:5726/theme/current',
+                        '/theme/current'
+                    ];
+                    
+                    let response = null;
+                    for (const endpoint of endpoints) {
+                        try {
+                            console.log(`尝试连接主题API: ${endpoint}`);
+                            response = await fetch(endpoint);
+                            if (response.ok) {
+                                console.log(`✅ 主题API连接成功: ${endpoint}`);
+                                break;
+                            }
+                        } catch (err) {
+                            console.log(`❌ 连接失败: ${endpoint}`, err.message);
+                        }
+                    }
+                    
+                    if (response && response.ok) {
+                        const theme = await response.json();
+                        this.applyTheme(theme);
+                    } else {
+                        console.warn('无法连接到主题API，使用默认主题');
+                        this.applyDefaultTheme();
+                    }
+                } catch (error) {
+                    console.error('加载主题失败:', error);
+                    this.applyDefaultTheme();
+                }
+            }
+            
+            /**
+             * 应用默认主题
+             */
+            applyDefaultTheme() {
+                const defaultTheme = {
+                    name: '默认主题',
+                    type: 'default',
+                    styles: {
+                        primaryColor: '#007bff',
+                        secondaryColor: '#0056b3',
+                        backgroundColor: '#f8f9fa',
+                        textColor: '#333333',
+                        cardBackground: '#ffffff',
+                        borderColor: '#e0e0e0',
+                        shadowColor: 'rgba(0, 123, 255, 0.1)'
+                    },
+                    background: {
+                        type: 'none',
+                        value: '',
+                        opacity: 1,
+                        blur: 0
+                    },
+                    customCSS: ''
+                };
+                this.applyTheme(defaultTheme);
+            }
+            
+            /**
+             * 应用主题
+             */
+            applyTheme(theme) {
+                if (!theme) return;
+                
+                // 深度比较主题对象，避免JSON.stringify的问题
+                if (this.isThemeEqual(theme, this.currentTheme)) {
+                    console.log('主题未变化，跳过应用');
+                    return;
+                }
+                
+                console.log('应用新主题:', theme.name, '旧主题:', this.currentTheme?.name);
+                
+                this.currentTheme = theme;
+                
+                // 重新加载主题CSS
+                this.reloadThemeCSS();
+                
+                // 应用主题到页面元素
+                this.applyThemeStyles(theme);
+                
+                console.log('主题应用完成:', theme.name);
+            }
+            
+            /**
+             * 深度比较两个主题对象
+             */
+            isThemeEqual(theme1, theme2) {
+                if (!theme1 || !theme2) return false;
+                
+                // 比较基本属性
+                if (theme1.name !== theme2.name || theme1.type !== theme2.type) {
+                    return false;
+                }
+                
+                // 比较样式
+                if (!this.isObjectEqual(theme1.styles, theme2.styles)) {
+                    return false;
+                }
+                
+                // 比较背景
+                if (!this.isObjectEqual(theme1.background, theme2.background)) {
+                    return false;
+                }
+                
+                // 比较自定义CSS
+                if (theme1.customCSS !== theme2.customCSS) {
+                    return false;
+                }
+                
+                return true;
+            }
+            
+            /**
+             * 深度比较两个对象
+             */
+            isObjectEqual(obj1, obj2) {
+                if (!obj1 && !obj2) return true;
+                if (!obj1 || !obj2) return false;
+                
+                const keys1 = Object.keys(obj1);
+                const keys2 = Object.keys(obj2);
+                
+                if (keys1.length !== keys2.length) {
+                    return false;
+                }
+                
+                for (const key of keys1) {
+                    if (obj1[key] !== obj2[key]) {
+                        return false;
+                    }
+                }
+                
+                return true;
+            }
+            
+            /**
+             * 重新加载主题CSS
+             */
+            reloadThemeCSS() {
+                const themeStylesheet = document.getElementById('theme-stylesheet');
+                if (themeStylesheet) {
+                    // 生成唯一时间戳防止缓存
+                    const timestamp = new Date().getTime() + Math.random();
+                    
+                    // 尝试多种方式加载CSS，适配不同环境
+                    const cssUrls = [
+                        `http://127.0.0.1:5726/theme/css?t=${timestamp}`,
+                        `http://localhost:5726/theme/css?t=${timestamp}`,
+                        `/theme/css?t=${timestamp}`
+                    ];
+                    
+                    // 清除之前的错误处理
+                    themeStylesheet.onerror = null;
+                    
+                    // 尝试加载CSS文件
+                    let currentUrlIndex = 0;
+                    const tryLoadCss = () => {
+                        if (currentUrlIndex >= cssUrls.length) {
+                            console.warn('所有CSS URL都加载失败，使用注入方案');
+                            this.injectThemeCSS();
+                            return;
+                        }
+                        
+                        const url = cssUrls[currentUrlIndex];
+                        console.log(`尝试加载CSS: ${url}`);
+                        
+                        // 创建临时链接测试加载
+                        const testLink = document.createElement('link');
+                        testLink.rel = 'stylesheet';
+                        testLink.href = url;
+                        
+                        testLink.onload = () => {
+                            console.log(`✅ CSS加载成功: ${url}`);
+                            themeStylesheet.href = url;
+                            testLink.remove();
+                            
+                            // 清理注入的CSS（如果存在）
+                            const injectedStyle = document.getElementById('injected-theme-css');
+                            if (injectedStyle) {
+                                injectedStyle.remove();
+                            }
+                        };
+                        
+                        testLink.onerror = () => {
+                            console.warn(`❌ CSS加载失败: ${url}`);
+                            testLink.remove();
+                            currentUrlIndex++;
+                            tryLoadCss();
+                        };
+                        
+                        document.head.appendChild(testLink);
+                    };
+                    
+                    tryLoadCss();
+                }
+            }
+            
+            /**
+             * 直接注入主题CSS（备用方案）
+             */
+            injectThemeCSS() {
+                if (!this.currentTheme) return;
+                
+                // 移除现有的动态样式和背景样式
+                const existingStyle = document.getElementById('injected-theme-css');
+                const existingBackground = document.getElementById('dynamic-background');
+                if (existingStyle) {
+                    existingStyle.remove();
+                }
+                if (existingBackground) {
+                    existingBackground.remove();
+                }
+                
+                // 创建新的样式元素，添加版本号确保重新应用
+                const version = new Date().getTime();
+                const styleElement = document.createElement('style');
+                styleElement.id = 'injected-theme-css';
+                styleElement.textContent = `/* 主题CSS v${version} */\n` + this.generateThemeCSS(this.currentTheme);
+                
+                document.head.appendChild(styleElement);
+                console.log(`主题CSS已重新注入到页面 (v${version})`);
+                
+                // 强制重新应用背景样式
+                this.applyBackgroundStyles(this.currentTheme.background);
+            }
+            
+            /**
+             * 生成主题CSS
+             */
+            generateThemeCSS(theme) {
+                const { styles, background } = theme;
+                
+                let css = `
+                    :root {
+                        --primary-color: ${styles.primaryColor};
+                        --secondary-color: ${styles.secondaryColor};
+                        --background-color: ${styles.backgroundColor};
+                        --text-color: ${styles.textColor};
+                        --card-background: ${styles.cardBackground};
+                        --border-color: ${styles.borderColor};
+                        --shadow-color: ${styles.shadowColor};
+                    }
+                    
+                    body {
+                        background-color: var(--background-color) !important;
+                        color: var(--text-color) !important;
+                    }
+                    
+                    .window-header {
+                        background-color: var(--primary-color) !important;
+                    }
+                    
+                    .sidebar {
+                        background-color: var(--card-background) !important;
+                        border-color: var(--border-color) !important;
+                    }
+                    
+                    .sidebar h2 {
+                        color: var(--text-color) !important;
+                    }
+                    
+                    .nav-item {
+                        color: var(--text-color) !important;
+                        border-color: var(--border-color) !important;
+                    }
+                    
+                    .nav-item:hover {
+                        background-color: var(--secondary-color) !important;
+                        color: var(--background-color) !important;
+                    }
+                    
+                    .nav-item.active {
+                        background-color: var(--primary-color) !important;
+                        color: var(--background-color) !important;
+                    }
+                    
+                    .content-area {
+                        background-color: var(--background-color) !important;
+                    }
+                    
+                    .window-title h1 {
+                        color: var(--background-color) !important;
+                    }
+                    
+                    .window-btn {
+                        background-color: var(--background-color) !important;
+                        border-color: var(--border-color) !important;
+                    }
+                    
+                    .window-btn:hover {
+                        background-color: var(--secondary-color) !important;
+                    }
+                `;
+                
+                // 添加背景样式
+                if (background.type !== 'none' && background.value) {
+                    css += this.generateBackgroundCSS(background);
+                }
+                
+                // 添加自定义CSS
+                if (theme.customCSS) {
+                    css += `\n/* 自定义CSS */\n${theme.customCSS}`;
+                }
+                
+                return css;
+            }
+            
+            /**
+             * 生成背景CSS
+             */
+            generateBackgroundCSS(background) {
+                let css = '';
+                switch (background.type) {
+                    case 'color':
+                        css = `
+                            body::before {
+                                content: '';
+                                position: fixed;
+                                top: 0;
+                                left: 0;
+                                width: 100%;
+                                height: 100%;
+                                background-color: ${background.value};
+                                opacity: ${background.opacity};
+                                z-index: -1;
+                            }
+                        `;
+                        break;
+                        
+                    case 'gradient':
+                        css = `
+                            body::before {
+                                content: '';
+                                position: fixed;
+                                top: 0;
+                                left: 0;
+                                width: 100%;
+                                height: 100%;
+                                background: ${background.value};
+                                opacity: ${background.opacity};
+                                z-index: -1;
+                            }
+                        `;
+                        break;
+                        
+                    case 'image':
+                        css = `
+                            body::before {
+                                content: '';
+                                position: fixed;
+                                top: 0;
+                                left: 0;
+                                width: 100%;
+                                height: 100%;
+                                background-image: url(${background.value});
+                                background-size: cover;
+                                background-position: center;
+                                background-repeat: no-repeat;
+                                opacity: ${background.opacity};
+                                ${background.blur > 0 ? `filter: blur(${background.blur}px);` : ''}
+                                z-index: -1;
+                            }
+                        `;
+                        break;
+                }
+                return css;
+            }
+            
+            /**
+             * 应用主题样式到页面元素
+             */
+            applyThemeStyles(theme) {
+                const { styles, background } = theme;
+                
+                // 应用基本样式
+                document.documentElement.style.setProperty('--primary-color', styles.primaryColor);
+                document.documentElement.style.setProperty('--secondary-color', styles.secondaryColor);
+                document.documentElement.style.setProperty('--background-color', styles.backgroundColor);
+                document.documentElement.style.setProperty('--text-color', styles.textColor);
+                document.documentElement.style.setProperty('--card-background', styles.cardBackground);
+                document.documentElement.style.setProperty('--border-color', styles.borderColor);
+                document.documentElement.style.setProperty('--shadow-color', styles.shadowColor);
+                
+                // 应用背景样式
+                this.applyBackgroundStyles(background);
+            }
+            
+            /**
+             * 应用背景样式
+             */
+            applyBackgroundStyles(background) {
+                // 移除之前的背景样式
+                const existingBackground = document.getElementById('dynamic-background');
+                if (existingBackground) {
+                    existingBackground.remove();
+                }
+                
+                if (background.type === 'none' || !background.value) {
+                    document.body.style.background = '';
+                    return;
+                }
+                
+                const backgroundStyle = document.createElement('style');
+                backgroundStyle.id = 'dynamic-background';
+                
+                let css = '';
+                switch (background.type) {
+                    case 'color':
+                        css = `
+                            body::before {
+                                content: '';
+                                position: fixed;
+                                top: 0;
+                                left: 0;
+                                width: 100%;
+                                height: 100%;
+                                background-color: ${background.value};
+                                opacity: ${background.opacity};
+                                z-index: -1;
+                            }
+                        `;
+                        break;
+                        
+                    case 'gradient':
+                        css = `
+                            body::before {
+                                content: '';
+                                position: fixed;
+                                top: 0;
+                                left: 0;
+                                width: 100%;
+                                height: 100%;
+                                background: ${background.value};
+                                opacity: ${background.opacity};
+                                z-index: -1;
+                            }
+                        `;
+                        break;
+                        
+                    case 'image':
+                        css = `
+                            body::before {
+                                content: '';
+                                position: fixed;
+                                top: 0;
+                                left: 0;
+                                width: 100%;
+                                height: 100%;
+                                background-image: url(${background.value});
+                                background-size: cover;
+                                background-position: center;
+                                background-repeat: no-repeat;
+                                opacity: ${background.opacity};
+                                ${background.blur > 0 ? `filter: blur(${background.blur}px);` : ''}
+                                z-index: -1;
+                            }
+                        `;
+                        break;
+                }
+                
+                backgroundStyle.textContent = css;
+                document.head.appendChild(backgroundStyle);
+            }
+            
+            /**
+             * 获取当前主题
+             */
+            getCurrentTheme() {
+                return this.currentTheme;
+            }
+        }
+        
+        // 初始化主题管理器
+        const themeManager = new ThemeManager();
+        
+        // 将主题管理器暴露到全局作用域，供其他脚本使用
+        window.themeManager = themeManager;
+    </script>
+</body>
+</html>

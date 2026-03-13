@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人设置</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: "SF Pro Text", "Arial", sans-serif;
+            background: #ffffff;
+            padding: 32px;
+            color: #333333;
+            line-height: 1.6;
+        }
+        
+        .page-header {
+            margin-bottom: 32px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .page-header h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #000000;
+            margin-bottom: 8px;
+        }
+        
+        .page-description {
+            font-size: 14px;
+            color: #666666;
+        }
+        
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid #e0e0e0;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .profile-avatar .avatar-placeholder {
+            width: 40px;
+            height: 40px;
+            fill: #999;
+        }
+        
+        .profile-avatar:hover {
+            border-color: #000000;
+            transform: scale(1.05);
+        }
+        
+        .avatar-upload {
+            display: none;
+        }
+        
+        .avatar-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .profile-avatar:hover .avatar-overlay {
+            opacity: 1;
+        }
+        
+        .avatar-overlay svg {
+            width: 20px;
+            height: 20px;
+            fill: white;
+        }
+        
+        .profile-avatar:hover {
+            border-color: #000000;
+            transform: scale(1.05);
+        }
+        
+        .settings-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+        }
+        
+        .settings-section {
+            background: #f8f8f8;
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #000000;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: #000000;
+            border-radius: 2px;
+        }
+        
+        .setting-item {
+            margin-bottom: 20px;
+        }
+        
+        .setting-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .setting-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #333333;
+            margin-bottom: 8px;
+        }
+        
+        .setting-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            background: #ffffff;
+            transition: all 0.2s ease;
+        }
+        
+        .setting-input:focus {
+            outline: none;
+            border-color: #000000;
+            box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+        }
+        
+        .setting-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            background: #ffffff;
+            resize: vertical;
+            min-height: 80px;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+        
+        .setting-textarea:focus {
+            outline: none;
+            border-color: #000000;
+            box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+        }
+        
+        .setting-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            background: #ffffff;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .setting-select:focus {
+            outline: none;
+            border-color: #000000;
+            box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        
+        .tag {
+            background: #000000;
+            color: #ffffff;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .tag-remove {
+            cursor: pointer;
+            font-size: 14px;
+            line-height: 1;
+        }
+        
+        .tag-remove:hover {
+            opacity: 0.7;
+        }
+        
+        .tag-input {
+            width: 120px;
+            padding: 4px 8px;
+            border: 1px dashed #e0e0e0;
+            border-radius: 16px;
+            font-size: 12px;
+            background: transparent;
+        }
+        
+        .tag-input:focus {
+            outline: none;
+            border-color: #000000;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 32px;
+            grid-column: 1 / -1;
+        }
+        
+        .save-button {
+            background: #000000;
+            color: #ffffff;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 100px;
+        }
+        
+        .save-button:hover {
+            background: #333333;
+            transform: translateY(-1px);
+        }
+        
+        .reset-button {
+            background: #ffffff;
+            color: #666666;
+            border: 1px solid #e0e0e0;
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 100px;
+        }
+        
+        .reset-button:hover {
+            background: #f8f8f8;
+            border-color: #cccccc;
+        }
+        
+        .full-width {
+            grid-column: 1 / -1;
+        }
+        
+        @media (max-width: 768px) {
+            .settings-container {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+            
+            body {
+                padding: 20px;
+            }
+            
+            .profile-avatar {
+                width: 60px;
+                height: 60px;
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <div>
+            <h2>个人设置</h2>
+            <p class="page-description">完善您的个人信息，让好友更好地了解您</p>
+        </div>
+        <div class="profile-avatar" id="profile-avatar" title="点击更换头像">
+            <svg class="avatar-placeholder" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+            </svg>
+            <div class="avatar-overlay">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/>
+                </svg>
+            </div>
+        </div>
+        <input type="file" id="avatar-upload" class="avatar-upload" accept="image/*">
+    </div>
+    
+    <div class="settings-container">
+        <!-- 基本信息 -->
+        <div class="settings-section">
+            <h3 class="section-title">基本信息</h3>
+            
+            <div class="setting-item">
+                <label class="setting-label">昵称</label>
+                <input type="text" class="setting-input" id="nickname" placeholder="请输入您的昵称">
+            </div>
+            
+            <div class="setting-item">
+                <label class="setting-label">性别</label>
+                <select class="setting-select" id="gender">
+                    <option value="">请选择</option>
+                    <option value="男">男</option>
+                    <option value="女">女</option>
+                    <option value="保密">保密</option>
+                </select>
+            </div>
+            
+            <div class="setting-item">
+                <label class="setting-label">年龄</label>
+                <input type="number" class="setting-input" id="age" placeholder="请输入年龄" min="1" max="120">
+            </div>
+            
+            <div class="setting-item">
+                <label class="setting-label">生日</label>
+                <input type="date" class="setting-input" id="birthday">
+            </div>
+            
+            <div class="setting-item">
+                <label class="setting-label">血型</label>
+                <select class="setting-select" id="bloodtype">
+                    <option value="">请选择</option>
+                    <option value="A">A型</option>
+                    <option value="B">B型</option>
+                    <option value="AB">AB型</option>
+                    <option value="O">O型</option>
+                    <option value="未知">未知</option>
+                </select>
+            </div>
+            
+            <div class="setting-item">
+                <label class="setting-label">星座</label>
+                <select class="setting-select" id="zodiac">
+                    <option value="">请选择</option>
+                    <option value="白羊座">白羊座</option>
+                    <option value="金牛座">金牛座</option>
+                    <option value="双子座">双子座</option>
+                    <option value="巨蟹座">巨蟹座</option>
+                    <option value="狮子座">狮子座</option>
+                    <option value="处女座">处女座</option>
+                    <option value="天秤座">天秤座</option>
+                    <option value="天蝎座">天蝎座</option>
+                    <option value="射手座">射手座</option>
+                    <option value="摩羯座">摩羯座</option>
+                    <option value="水瓶座">水瓶座</option>
+                    <option value="双鱼座">双鱼座</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- 五行属性 -->
+        <div class="settings-section">
+            <h3 class="section-title">五行属性</h3>
+            
+            <div class="setting-item">
+                <label class="setting-label">五行</label>
+                <select class="setting-select" id="element">
+                    <option value="">请选择</option>
+                    <option value="金">金</option>
+                    <option value="木">木</option>
+                    <option value="水">水</option>
+                    <option value="火">火</option>
+                    <option value="土">土</option>
+                </select>
+            </div>
+            
+            <div class="setting-item">
+                <label class="setting-label">生肖</label>
+                <select class="setting-select" id="constellation">
+                    <option value="">请选择</option>
+                    <option value="鼠">鼠</option>
+                    <option value="牛">牛</option>
+                    <option value="虎">虎</option>
+                    <option value="兔">兔</option>
+                    <option value="龙">龙</option>
+                    <option value="蛇">蛇</option>
+                    <option value="马">马</option>
+                    <option value="羊">羊</option>
+                    <option value="猴">猴</option>
+                    <option value="鸡">鸡</option>
+                    <option value="狗">狗</option>
+                    <option value="猪">猪</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- 兴趣爱好 -->
+        <div class="settings-section">
+            <h3 class="section-title">兴趣爱好</h3>
+            
+            <div class="setting-item">
+                <label class="setting-label">爱好</label>
+                <input type="text" class="setting-input" id="hobbies" placeholder="请输入您的爱好，用逗号分隔">
+                <div class="tags-container" id="hobbies-tags"></div>
+            </div>
+            
+            <div class="setting-item">
+                <label class="setting-label">喜欢的美食</label>
+                <input type="text" class="setting-input" id="favoritefoods" placeholder="请输入喜欢的美食，用逗号分隔">
+                <div class="tags-container" id="foods-tags"></div>
+            </div>
+        </div>
+        
+        <!-- 个人简介 -->
+        <div class="settings-section full-width">
+            <h3 class="section-title">个人简介</h3>
+            
+            <div class="setting-item">
+                <label class="setting-label">个性签名</label>
+                <input type="text" class="setting-input" id="motto" placeholder="请输入您的个性签名">
+            </div>
+            
+            <div class="setting-item">
+                <label class="setting-label">个人标签</label>
+                <input type="text" class="setting-input" id="tags" placeholder="请输入个人标签，用逗号分隔">
+                <div class="tags-container" id="tags-container"></div>
+            </div>
+            
+            <div class="setting-item">
+                <label class="setting-label">个人简介</label>
+                <textarea class="setting-textarea" id="personality" placeholder="请介绍一下自己..."></textarea>
+            </div>
+        </div>
+        
+        <!-- 联系方式 -->
+        <div class="settings-section">
+            <h3 class="section-title">联系方式</h3>
+            
+            <div class="setting-item">
+                <label class="setting-label">邮箱</label>
+                <input type="email" class="setting-input" id="email" placeholder="请输入邮箱地址">
+            </div>
+            
+            <div class="setting-item">
+                <label class="setting-label">手机号</label>
+                <input type="tel" class="setting-input" id="phone" placeholder="请输入手机号码">
+            </div>
+            
+            <div class="setting-item">
+                <label class="setting-label">微信号</label>
+                <input type="text" class="setting-input" id="wechat" placeholder="请输入微信号">
+            </div>
+            
+            <div class="setting-item">
+                <label class="setting-label">QQ号</label>
+                <input type="text" class="setting-input" id="qq" placeholder="请输入QQ号码">
+            </div>
+        </div>
+        
+        <!-- 其他信息 -->
+        <div class="settings-section">
+            <h3 class="section-title">其他信息</h3>
+            
+            <div class="setting-item">
+                <label class="setting-label">所在地</label>
+                <input type="text" class="setting-input" id="location" placeholder="请输入所在城市">
+            </div>
+            
+            <div class="setting-item">
+                <label class="setting-label">职业</label>
+                <input type="text" class="setting-input" id="occupation" placeholder="请输入职业">
+            </div>
+            
+            <div class="setting-item">
+                <label class="setting-label">个人网站</label>
+                <input type="url" class="setting-input" id="website" placeholder="请输入个人网站地址">
+            </div>
+            
+            <div class="setting-item">
+                <label class="setting-label">GitHub</label>
+                <input type="text" class="setting-input" id="github" placeholder="请输入GitHub用户名">
+            </div>
+        </div>
+    </div>
+    
+    <div class="button-group">
+        <button class="save-button" onclick="saveSettings()">保存设置</button>
+        <button class="reset-button" onclick="resetSettings()">重置</button>
+    </div>
+    
+    <script>
+        let userData = {};
+        
+        // 页面加载时获取用户信息
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserInfo();
+        });
+        
+        /**
+         * 加载用户信息
+         */
+        async function loadUserInfo() {
+            try {
+                // 首先尝试获取完整信息（本地访问）
+                const response = await fetch('http://localhost:5726/userinfo/full');
+                if (!response.ok) {
+                    if (response.status === 403) {
+                        // 如果是403错误，使用公开接口
+                        console.log('使用公开接口获取用户信息');
+                        await loadPublicUserInfo();
+                        return;
+                    }
+                    throw new Error(`HTTP错误: ${response.status}`);
+                }
+                
+                userData = await response.json();
+                populateForm(userData);
+                
+            } catch (error) {
+                console.error('加载用户信息失败:', error);
+                // 尝试使用公开接口作为备选
+                try {
+                    await loadPublicUserInfo();
+                } catch (publicError) {
+                    alert('加载用户信息失败，请检查网络连接');
+                }
+            }
+        }
+        
+        /**
+         * 加载公开用户信息
+         */
+        async function loadPublicUserInfo() {
+            try {
+                const response = await fetch('http://localhost:5726/userinfo');
+                if (!response.ok) {
+                    throw new Error(`HTTP错误: ${response.status}`);
+                }
+                
+                const publicData = await response.json();
+                // 将公开数据转换为完整数据格式
+                userData = {
+                    UserInfo: {
+                        Nickname: publicData.nickname,
+                        Gender: publicData.gender,
+                        Age: publicData.age,
+                        Location: publicData.location,
+                        Occupation: publicData.occupation,
+                        Avatar: publicData.avatar,
+                        Motto: publicData.motto,
+                        Tags: publicData.tags,
+                        Element: publicData.element,
+                        Zodiac: publicData.zodiac,
+                        Constellation: publicData.constellation
+                    }
+                };
+                populateForm(userData);
+                
+            } catch (error) {
+                console.error('加载公开用户信息失败:', error);
+                throw error;
+            }
+        }
+        
+        /**
+         * 填充表单数据
+         */
+        function populateForm(data) {
+            // 显示头像
+            if (data.UserInfo?.Avatar) {
+                updateAvatarDisplay(data.UserInfo.Avatar);
+            }
+            
+            // 基本信息
+            document.getElementById('nickname').value = data.UserInfo?.Nickname || '';
+            document.getElementById('gender').value = data.UserInfo?.Gender || '';
+            document.getElementById('age').value = data.UserInfo?.Age || '';
+            document.getElementById('birthday').value = data.UserInfo?.Birthday || '';
+            document.getElementById('bloodtype').value = data.UserInfo?.BloodType || '';
+            document.getElementById('zodiac').value = data.UserInfo?.Zodiac || '';
+            
+            // 五行属性
+            document.getElementById('element').value = data.UserInfo?.Element || '';
+            document.getElementById('constellation').value = data.UserInfo?.Constellation || '';
+            
+            // 兴趣爱好
+            document.getElementById('hobbies').value = data.UserInfo?.Hobbies || '';
+            document.getElementById('favoritefoods').value = data.UserInfo?.FavoriteFoods || '';
+            
+            // 个人简介
+            document.getElementById('motto').value = data.UserInfo?.Motto || '';
+            document.getElementById('tags').value = data.UserInfo?.Tags || '';
+            document.getElementById('personality').value = data.UserInfo?.Personality || '';
+            
+            // 联系方式
+            document.getElementById('email').value = data.UserInfo?.Email || '';
+            document.getElementById('phone').value = data.UserInfo?.Phone || '';
+            document.getElementById('wechat').value = data.UserInfo?.WeChat || '';
+            document.getElementById('qq').value = data.UserInfo?.QQ || '';
+            
+            // 其他信息
+            document.getElementById('location').value = data.UserInfo?.Location || '';
+            document.getElementById('occupation').value = data.UserInfo?.Occupation || '';
+            document.getElementById('website').value = data.UserInfo?.Website || '';
+            document.getElementById('github').value = data.UserInfo?.GitHub || '';
+            
+            // 渲染标签
+            renderTags('hobbies-tags', data.UserInfo?.Hobbies);
+            renderTags('foods-tags', data.UserInfo?.FavoriteFoods);
+            renderTags('tags-container', data.UserInfo?.Tags);
+        }
+        
+        /**
+         * 渲染标签
+         */
+        function renderTags(containerId, tagsString) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            if (tagsString) {
+                const tags = tagsString.split(',').map(tag => tag.trim()).filter(tag => tag);
+                tags.forEach(tag => {
+                    const tagElement = document.createElement('div');
+                    tagElement.className = 'tag';
+                    tagElement.innerHTML = `
+                        ${tag}
+                        <span class="tag-remove" onclick="removeTag(this)">×</span>
+                    `;
+                    container.appendChild(tagElement);
+                });
+            }
+            
+            // 添加输入框
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'tag-input';
+            input.placeholder = '添加标签';
+            input.onkeypress = function(e) {
+                if (e.key === 'Enter') {
+                    addTag(this.value, containerId);
+                    this.value = '';
+                }
+            };
+            container.appendChild(input);
+        }
+        
+        /**
+         * 添加标签
+         */
+        function addTag(tagText, containerId) {
+            if (!tagText.trim()) return;
+            
+            const inputField = document.querySelector(`#${containerId} .tag-input`);
+            const currentInput = inputField.previousElementSibling;
+            const currentTags = currentInput ? currentInput.value : '';
+            
+            const tags = currentTags ? currentTags.split(',').map(tag => tag.trim()) : [];
+            if (!tags.includes(tagText.trim())) {
+                tags.push(tagText.trim());
+                
+                // 更新对应的输入框
+                const inputId = containerId.replace('-tags', '').replace('container-', '');
+                const mainInput = document.getElementById(inputId === 'tags' ? 'tags' : 
+                    inputId === 'hobbies' ? 'hobbies' : 'favoritefoods');
+                if (mainInput) {
+                    mainInput.value = tags.join(', ');
+                }
+                
+                renderTags(containerId, tags.join(', '));
+            }
+        }
+        
+        /**
+         * 移除标签
+         */
+        function removeTag(element) {
+            const tag = element.parentElement;
+            const tagText = tag.textContent.replace('×', '').trim();
+            const container = tag.parentElement;
+            const containerId = container.id;
+            
+            // 获取当前标签
+            const inputId = containerId.replace('-tags', '').replace('container-', '');
+            const mainInput = document.getElementById(inputId === 'tags' ? 'tags' : 
+                inputId === 'hobbies' ? 'hobbies' : 'favoritefoods');
+            
+            if (mainInput) {
+                const tags = mainInput.value.split(',').map(tag => tag.trim()).filter(tag => tag !== tagText);
+                mainInput.value = tags.join(', ');
+                renderTags(containerId, tags.join(', '));
+            }
+        }
+        
+        /**
+         * 保存设置
+         */
+        async function saveSettings() {
+            try {
+                // 收集表单数据
+                const formData = {
+                    UserInfo: {
+                        Nickname: document.getElementById('nickname').value,
+                        Gender: document.getElementById('gender').value,
+                        Age: document.getElementById('age').value,
+                        Birthday: document.getElementById('birthday').value,
+                        BloodType: document.getElementById('bloodtype').value,
+                        Zodiac: document.getElementById('zodiac').value,
+                        Element: document.getElementById('element').value,
+                        Constellation: document.getElementById('constellation').value,
+                        Hobbies: document.getElementById('hobbies').value,
+                        FavoriteFoods: document.getElementById('favoritefoods').value,
+                        Motto: document.getElementById('motto').value,
+                        Tags: document.getElementById('tags').value,
+                        Personality: document.getElementById('personality').value,
+                        Email: document.getElementById('email').value,
+                        Phone: document.getElementById('phone').value,
+                        WeChat: document.getElementById('wechat').value,
+                        QQ: document.getElementById('qq').value,
+                        Location: document.getElementById('location').value,
+                        Occupation: document.getElementById('occupation').value,
+                        Website: document.getElementById('website').value,
+                        GitHub: document.getElementById('github').value
+                    }
+                };
+                
+                // 发送到服务器
+                const response = await fetch('http://localhost:5726/userinfo/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP错误: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('个人信息保存成功！');
+                } else {
+                    alert('保存失败：' + result.message);
+                }
+                
+            } catch (error) {
+                console.error('保存用户信息失败:', error);
+                alert('保存失败，请检查网络连接');
+            }
+        }
+        
+        /**
+         * 重置设置
+         */
+        function resetSettings() {
+            if (confirm('确定要重置所有设置吗？这将恢复到上次保存的状态。')) {
+                loadUserInfo();
+            }
+        }
+        
+        /**
+         * 头像点击事件
+         */
+        document.getElementById('profile-avatar').addEventListener('click', function() {
+            document.getElementById('avatar-upload').click();
+        });
+        
+        /**
+         * 头像文件选择处理
+         */
+        document.getElementById('avatar-upload').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            // 验证文件类型
+            if (!file.type.startsWith('image/')) {
+                alert('请选择图片文件');
+                return;
+            }
+            
+            // 验证文件大小（最大2MB）
+            if (file.size > 2 * 1024 * 1024) {
+                alert('图片文件过大，请选择小于2MB的图片');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const base64Data = e.target.result;
+                
+                try {
+                    // 显示上传中状态
+                    const avatarElement = document.getElementById('profile-avatar');
+                    const originalContent = avatarElement.innerHTML;
+                    avatarElement.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%;">上传中...</div>';
+                    
+                    // 上传到服务器
+                    const response = await fetch('http://localhost:5726/userinfo/avatar', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ avatar: base64Data })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP错误: ${response.status}`);
+                    }
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        // 更新头像显示
+                        updateAvatarDisplay(base64Data);
+                        alert('头像上传成功！');
+                    } else {
+                        throw new Error(result.message || '上传失败');
+                    }
+                    
+                } catch (error) {
+                    console.error('头像上传失败:', error);
+                    alert('头像上传失败：' + error.message);
+                    // 恢复原状
+                    document.getElementById('profile-avatar').innerHTML = originalContent;
+                }
+            };
+            
+            reader.readAsDataURL(file);
+        });
+        
+        /**
+         * 更新头像显示
+         */
+        function updateAvatarDisplay(base64Data) {
+            const avatarElement = document.getElementById('profile-avatar');
+            avatarElement.innerHTML = `
+                <img src="${base64Data}" alt="用户头像">
+                <div class="avatar-overlay">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/>
+                    </svg>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

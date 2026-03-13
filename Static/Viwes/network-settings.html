@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网络设置</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: "SF Pro Text", "Arial", sans-serif;
+            background: #ffffff;
+            padding: 32px;
+            color: #333333;
+            line-height: 1.6;
+        }
+        
+        .page-header {
+            margin-bottom: 32px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .page-header h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #000000;
+            margin-bottom: 8px;
+        }
+        
+        .page-description {
+            font-size: 14px;
+            color: #666666;
+        }
+        
+        /* 全局通知样式 - 类似theme-settings.html */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 20px;
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 14px;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.success {
+            background: #28a745;
+        }
+        
+        .notification.error {
+            background: #dc3545;
+        }
+        
+        .notification.info {
+            background: #17a2b8;
+        }
+        
+        .settings-section {
+            margin-bottom: 32px;
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 24px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #000000;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #f0f0f0;
+            position: relative;
+        }
+        
+        .unsaved-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #dc3545;
+            border-radius: 50%;
+            margin-left: 8px;
+            animation: pulse 1.5s infinite;
+        }
+        
+        .saving-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #17a2b8;
+            border-radius: 50%;
+            margin-left: 8px;
+            animation: saving-pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        @keyframes saving-pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background-color 0.2s ease;
+        }
+        
+        .setting-item:hover {
+            background-color: #fafafa;
+            margin: 0 -24px;
+            padding: 16px 24px;
+        }
+        
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+        
+        .setting-info {
+            flex: 1;
+            margin-right: 16px;
+        }
+        
+        .setting-info h4 {
+            font-size: 14px;
+            font-weight: 500;
+            color: #000000;
+            margin-bottom: 4px;
+        }
+        
+        .setting-info p {
+            font-size: 12px;
+            color: #666666;
+            line-height: 1.4;
+        }
+        
+        .setting-control {
+            display: flex;
+            align-items: center;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background: #e0e0e0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        
+        .toggle-switch.active {
+            background: #000000;
+        }
+        
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: #ffffff;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .toggle-switch.active::after {
+            transform: translateX(20px);
+        }
+        
+        .text-input {
+            padding: 8px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            width: 200px;
+            transition: border-color 0.2s ease;
+        }
+        
+        .text-input:focus {
+            outline: none;
+            border-color: #000000;
+        }
+        
+        .save-server-button {
+            background: #000000;
+            color: #ffffff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            margin-left: 8px;
+        }
+        
+        .save-server-button:hover {
+            background: #333333;
+        }
+        
+        .save-server-button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .text-input.error {
+            border-color: #dc3545;
+            background-color: #fff5f5;
+        }
+        
+        .text-input.success {
+            border-color: #28a745;
+            background-color: #f0fff4;
+        }
+        
+        /* 端口映射状态指示器 */
+        .holepunch-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            margin-left: 12px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+        }
+        
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+        
+        .status-indicator.active {
+            background: #28a745;
+        }
+        
+        .status-indicator.inactive {
+            background: #6c757d;
+        }
+        
+        .status-indicator.error {
+            background: #dc3545;
+        }
+        
+        .status-indicator.warning {
+            background: #ffc107;
+        }
+        
+        .holepunch-details {
+            font-size: 11px;
+            color: #6c757d;
+            margin-top: 4px;
+        }
+        
+        .section-description {
+            font-size: 13px;
+            color: #666666;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        
+        .search-container {
+            margin-bottom: 24px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .search-input {
+            flex: 1;
+            max-width: 400px;
+            padding: 10px 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #000000;
+            box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+        }
+        
+        .search-clear {
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .search-clear:hover {
+            background: #e9ecef;
+        }
+        
+        .search-results-info {
+            font-size: 12px;
+            color: #666666;
+            margin-left: 8px;
+        }
+        
+
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <h2>网络设置</h2>
+        <p class="page-description">配置网络连接、UPnP、端口映射和分享选项</p>
+    </div>
+    
+    <!-- 搜索功能 -->
+    <div class="search-container">
+        <input type="text" class="search-input" id="searchInput" placeholder="搜索设置项（如：UPnP、IPv4、分享等）" />
+        <button class="search-clear" id="clearSearch" onclick="clearSearch()" style="display: none;">清除</button>
+        <span class="search-results-info" id="searchResultsInfo"></span>
+    </div>
+    
+    <!-- 网络连接设置 -->
+    <div class="settings-section">
+        <h3 class="section-title">网络连接<span class="unsaved-indicator" id="unsaved-indicator" style="display: none;"></span><span class="saving-indicator" id="saving-indicator" style="display: none;"></span></h3>
+        <p class="section-description">配置P2P网络连接和端口映射设置</p>
+        
+        <div class="setting-item">
+            <div class="setting-info">
+                <h4>启用UPnP</h4>
+                <p>自动配置路由器端口映射，改善连接质量</p>
+                <div class="holepunch-details" id="upnp-status-details">正在检测UPnP状态...</div>
+            </div>
+            <div class="setting-control">
+                <div class="toggle-switch" id="ActiveUPnP" onclick="toggleSetting('ActiveUPnP')"></div>
+                <div class="holepunch-status" id="upnp-status">
+                    <div class="status-indicator warning" id="upnp-indicator"></div>
+                    <span id="upnp-status-text">检测中...</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="setting-item">
+            <div class="setting-info">
+                <h4>启用PCP</h4>
+                <p>端口控制协议，替代UPnP的现代方案</p>
+                <div class="holepunch-details" id="pcp-status-details">正在检测PCP状态...</div>
+            </div>
+            <div class="setting-control">
+                <div class="toggle-switch" id="ActivePCP" onclick="toggleSetting('ActivePCP')"></div>
+                <div class="holepunch-status" id="pcp-status">
+                    <div class="status-indicator warning" id="pcp-indicator"></div>
+                    <span id="pcp-status-text">检测中...</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="setting-item">
+            <div class="setting-info">
+                <h4>退出时销毁UPnP通道</h4>
+                <p>程序关闭时自动清理UPnP端口映射</p>
+            </div>
+            <div class="setting-control">
+                <div class="toggle-switch" id="DestroyUPnPOnExit" onclick="toggleSetting('DestroyUPnPOnExit')"></div>
+            </div>
+        </div>
+        
+        <div class="setting-item">
+            <div class="setting-info">
+                <h4>退出时销毁PCP通道</h4>
+                <p>程序关闭时自动清理PCP端口映射</p>
+            </div>
+            <div class="setting-control">
+                <div class="toggle-switch" id="DestroyPCPOnExit" onclick="toggleSetting('DestroyPCPOnExit')"></div>
+            </div>
+        </div>
+        
+        <div class="setting-item">
+            <div class="setting-info">
+                <h4>监听IPv4</h4>
+                <p>启用IPv4网络协议支持</p>
+            </div>
+            <div class="setting-control">
+                <div class="toggle-switch" id="ListenIPv4" onclick="toggleSetting('ListenIPv4')"></div>
+            </div>
+        </div>
+        
+        <div class="setting-item">
+            <div class="setting-info">
+                <h4>监听IPv6</h4>
+                <p>启用IPv6网络协议支持</p>
+            </div>
+            <div class="setting-control">
+                <div class="toggle-switch" id="ListenIPv6" onclick="toggleSetting('ListenIPv6')"></div>
+            </div>
+        </div>
+        
+        <div class="setting-item">
+            <div class="setting-info">
+                <h4>UDP打洞</h4>
+                <p>使用UDP打洞技术建立P2P连接</p>
+            </div>
+            <div class="setting-control">
+                <div class="toggle-switch" id="UDPHolePunching" onclick="toggleSetting('UDPHolePunching')"></div>
+            </div>
+        </div>
+        
+        <div class="setting-item">
+            <div class="setting-info">
+                <h4>允许作为中继</h4>
+                <p>允许本机作为其他用户的中继节点</p>
+            </div>
+            <div class="setting-control">
+                <div class="toggle-switch" id="AllowAsRelay" onclick="toggleSetting('AllowAsRelay')"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 内容分享设置 -->
+    <div class="settings-section">
+        <h3 class="section-title">内容分享</h3>
+        <p class="section-description">配置内容分享和隐私设置</p>
+        
+        <div class="setting-item">
+            <div class="setting-info">
+                <h4>广播身份</h4>
+                <p>向网络广播本机身份信息</p>
+            </div>
+            <div class="setting-control">
+                <div class="toggle-switch" id="BroadcastIdentity" onclick="toggleSetting('BroadcastIdentity')"></div>
+            </div>
+        </div>
+        
+        <div class="setting-item">
+            <div class="setting-info">
+                <h4>向非好友分享视频</h4>
+                <p>允许非好友用户访问本机视频内容</p>
+            </div>
+            <div class="setting-control">
+                <div class="toggle-switch" id="ShareVideoWithNonFriends" onclick="toggleSetting('ShareVideoWithNonFriends')"></div>
+            </div>
+        </div>
+        
+        <div class="setting-item">
+            <div class="setting-info">
+                <h4>向非好友分享帖子</h4>
+                <p>允许非好友用户访问本机图文内容</p>
+            </div>
+            <div class="setting-control">
+                <div class="toggle-switch" id="SharePostsWithNonFriends" onclick="toggleSetting('SharePostsWithNonFriends')"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- STUN服务器设置 -->
+    <div class="settings-section">
+        <h3 class="section-title">STUN服务器</h3>
+        <p class="section-description">配置STUN服务器用于NAT穿透</p>
+        
+        <div class="setting-item">
+            <div class="setting-info">
+                <h4>STUN服务器地址</h4>
+                <p>用于NAT穿透的STUN服务器地址和端口（格式: stun.example.com:3478）</p>
+            </div>
+            <div class="setting-control">
+                <input type="text" class="text-input" id="STUNServer" placeholder="stun.example.com:3478" oninput="validateSTUNServerInput()" onchange="validateAndSaveSTUNServer()">
+                <button class="save-server-button" onclick="validateAndSaveSTUNServer()">保存</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentConfig = {};
+        let hasChanges = false;
+        let autoSaveTimer = null;
+        const AUTO_SAVE_DELAY = 2000; // 2秒后自动保存
+        let allSettings = []; // 存储所有设置项用于搜索
+        let searchTimeout = null; // 搜索延迟定时器
+        let statusUpdateInterval = null; // 状态更新定时器
+        let holePunchStatus = {}; // 端口映射状态缓存
+        let statusUpdateRetryCount = 0; // 状态更新重试计数
+        const MAX_STATUS_RETRIES = 3; // 最大重试次数
+        
+        /**
+         * 初始化页面
+         */
+        async function init() {
+            console.log('初始化网络设置页面...');
+            showNotification('正在加载网络配置...', 'info');
+            
+            try {
+                await loadConfig();
+                console.log('配置加载完成，开始更新UI...');
+                showNotification('配置加载完成', 'success');
+                
+                // 初始化搜索功能
+                initSearch();
+                
+                // 启动实时状态更新
+                startStatusUpdates();
+                
+                // 初始化端口映射状态
+                updateHolePunchStatus();
+            } catch (error) {
+                console.error('初始化失败:', error);
+                showNotification('初始化失败: ' + error.message, 'error');
+            }
+        }
+        
+        /**
+         * 加载配置
+         */
+        async function loadConfig() {
+            console.log('开始加载配置...');
+            try {
+                // 使用多种连接方式，适配不同环境
+                const endpoints = [
+                    'http://127.0.0.1:5726/network/config',
+                    'http://localhost:5726/network/config',
+                    '/network/config'
+                ];
+                
+                let response = null;
+                for (const endpoint of endpoints) {
+                    try {
+                        console.log(`尝试连接: ${endpoint}`);
+                        response = await fetch(endpoint);
+                        if (response.ok) {
+                            console.log(`✅ 连接成功: ${endpoint}`);
+                            break;
+                        }
+                    } catch (err) {
+                        console.log(`❌ 连接失败: ${endpoint}`, err.message);
+                    }
+                }
+                
+                if (!response || !response.ok) {
+                    throw new Error('所有连接方式都失败了');
+                }
+                
+                const responseData = await response.json();
+                console.log('获取到的配置数据:', responseData);
+                
+                // 提取实际的配置数据（后端返回的是包装对象）
+                if (responseData.success && responseData.config) {
+                    currentConfig = responseData.config;
+                    console.log('提取到的配置对象:', currentConfig);
+                    updateUI();
+                    console.log('UI更新完成');
+                } else {
+                    throw new Error('配置数据格式错误: ' + JSON.stringify(responseData));
+                }
+            } catch (error) {
+                console.error('加载配置失败:', error);
+                showNotification('加载配置失败: ' + error.message, 'error');
+                throw error; // 重新抛出错误让上层处理
+            }
+        }
+        
+        /**
+         * 初始化搜索功能
+         */
+        function initSearch() {
+            // 收集所有设置项
+            collectAllSettings();
+            
+            // 绑定搜索输入事件
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        performSearch(this.value);
+                    }, 300);
+                });
+            }
+        }
+        
+        /**
+         * 收集所有设置项
+         */
+        function collectAllSettings() {
+            allSettings = [];
+            
+            // 收集所有设置项的信息
+            document.querySelectorAll('.setting-item').forEach(item => {
+                const title = item.querySelector('h4');
+                const description = item.querySelector('p');
+                const control = item.querySelector('.setting-control');
+                
+                if (title && description) {
+                    allSettings.push({
+                        element: item,
+                        title: title.textContent.toLowerCase(),
+                        description: description.textContent.toLowerCase(),
+                        keywords: [
+                            title.textContent.toLowerCase(),
+                            description.textContent.toLowerCase(),
+                            item.querySelector('.toggle-switch') ? item.querySelector('.toggle-switch').id.toLowerCase() : '',
+                            item.querySelector('.text-input') ? item.querySelector('.text-input').id.toLowerCase() : ''
+                        ].filter(Boolean)
+                    });
+                }
+            });
+        }
+        
+        /**
+         * 执行搜索
+         */
+        function performSearch(query) {
+            const searchTerm = query.toLowerCase().trim();
+            const clearButton = document.getElementById('clearSearch');
+            const resultsInfo = document.getElementById('searchResultsInfo');
+            
+            if (!searchTerm) {
+                // 显示所有设置项
+                allSettings.forEach(setting => {
+                    setting.element.style.display = 'flex';
+                });
+                
+                // 显示所有section
+                document.querySelectorAll('.settings-section').forEach(section => {
+                    section.style.display = 'block';
+                });
+                
+                if (clearButton) clearButton.style.display = 'none';
+                if (resultsInfo) resultsInfo.textContent = '';
+                return;
+            }
+            
+            // 显示清除按钮
+            if (clearButton) clearButton.style.display = 'inline-block';
+            
+            let visibleCount = 0;
+            
+            // 搜索并显示匹配的设置项
+            allSettings.forEach(setting => {
+                const isMatch = setting.keywords.some(keyword => keyword.includes(searchTerm));
+                setting.element.style.display = isMatch ? 'flex' : 'none';
+                if (isMatch) visibleCount++;
+            });
+            
+            // 隐藏没有匹配项的section
+            document.querySelectorAll('.settings-section').forEach(section => {
+                const visibleItems = section.querySelectorAll('.setting-item[style*="display: flex"]');
+                section.style.display = visibleItems.length > 0 ? 'block' : 'none';
+            });
+            
+            // 更新搜索结果信息
+            if (resultsInfo) {
+                resultsInfo.textContent = `找到 ${visibleCount} 个相关设置`;
+            }
+        }
+        
+        /**
+         * 清除搜索
+         */
+        function clearSearch() {
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.value = '';
+                performSearch('');
+            }
+        }
+        
+        /**
+         * 更新UI显示
+         */
+        function updateUI() {
+            console.log('更新UI，当前配置:', currentConfig);
+            
+            // 重新收集设置项（因为UI可能已更新）
+            collectAllSettings();
+            
+            // 更新所有开关状态
+            const switches = ['ActiveUPnP', 'ActivePCP', 'DestroyUPnPOnExit', 'DestroyPCPOnExit', 
+                           'ListenIPv4', 'ListenIPv6', 'UDPHolePunching', 'AllowAsRelay',
+                           'BroadcastIdentity', 'ShareVideoWithNonFriends', 'SharePostsWithNonFriends'];
+            
+            switches.forEach(key => {
+                const element = document.getElementById(key);
+                if (element) {
+                    const value = getConfigValue(key);
+                    console.log(`开关 ${key}: ${value} (元素: ${element ? '存在' : '不存在'})`);
+                    if (value) {
+                        element.classList.add('active');
+                    } else {
+                        element.classList.remove('active');
+                    }
+                } else {
+                    console.log(`开关元素 ${key} 不存在`);
+                }
+            });
+            
+            // 更新文本输入框
+            const stunServer = document.getElementById('STUNServer');
+            if (stunServer) {
+                const stunValue = getConfigValue('STUNServer');
+                console.log(`STUN服务器: ${stunValue}`);
+                stunServer.value = stunValue || '';
+            }
+        }
+        
+        /**
+         * 获取配置值
+         */
+        function getConfigValue(key) {
+            for (const section in currentConfig) {
+                if (currentConfig[section][key] !== undefined) {
+                    return currentConfig[section][key];
+                }
+            }
+            return null;
+        }
+        
+        /**
+         * 设置配置值（带自动保存）
+         */
+        function setConfigValue(key, value) {
+            let found = false;
+            for (const section in currentConfig) {
+                if (currentConfig[section][key] !== undefined) {
+                    currentConfig[section][key] = value;
+                    found = true;
+                    break;
+                }
+            }
+            
+            if (found) {
+                hasChanges = true;
+                console.log(`设置 ${key} = ${value}`);
+                
+                // 显示未保存指示器
+                const indicator = document.getElementById('unsaved-indicator');
+                if (indicator) {
+                    indicator.style.display = 'inline-block';
+                }
+                
+                // 清除之前的自动保存定时器
+                if (autoSaveTimer) {
+                    clearTimeout(autoSaveTimer);
+                }
+                
+                // 设置新的自动保存定时器
+                autoSaveTimer = setTimeout(() => {
+                    if (hasChanges) {
+                        console.log('自动保存配置...');
+                        saveAllSettings(); // 自动保存
+                    }
+                }, AUTO_SAVE_DELAY);
+            } else {
+                console.warn(`未找到配置项: ${key}`);
+            }
+        }
+        
+        /**
+         * 切换开关设置
+         */
+        function toggleSetting(key) {
+            const currentValue = getConfigValue(key);
+            const newValue = !currentValue;
+            
+            setConfigValue(key, newValue);
+            
+            // 更新UI
+            const element = document.getElementById(key);
+            if (element) {
+                if (newValue) {
+                    element.classList.add('active');
+                } else {
+                    element.classList.remove('active');
+                }
+            }
+            
+            showNotification(`${key} 已更改为 ${newValue ? '开启' : '关闭'}`, 'success');
+        }
+        
+        /**
+         * 更新文本设置（除STUN服务器外）
+         */
+        function updateTextSetting(key, value) {
+            if (key === 'STUNServer') {
+                return; // STUN服务器需要手动验证保存
+            }
+            setConfigValue(key, value);
+            showNotification(`${key} 已更新`, 'success');
+        }
+        
+        /**
+         * 验证并保存STUN服务器地址
+         */
+        function validateAndSaveSTUNServer() {
+            const input = document.getElementById('STUNServer');
+            const value = input.value.trim();
+            const button = input.nextElementSibling; // 保存按钮
+            
+            // 空值检查
+            if (!value) {
+                showNotification('STUN服务器地址不能为空', 'error');
+                input.classList.add('error');
+                input.classList.remove('success');
+                return;
+            }
+            
+            // 清除之前的样式
+            input.classList.remove('error', 'success');
+            
+            // 正则表达式验证STUN服务器地址格式
+            // 支持格式：stun.example.com:3478 或 example.com:3478 或 192.168.1.1:3478
+            const stunRegex = /^(stun:)?([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)*[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$|^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+            
+            // 分离主机和端口
+            let host, port;
+            if (value.includes(':')) {
+                const parts = value.split(':');
+                if (parts.length !== 2) {
+                    input.classList.add('error');
+                    showNotification('STUN服务器地址格式错误，应为 host:port 格式', 'error');
+                    return;
+                }
+                host = parts[0];
+                port = parseInt(parts[1]);
+            } else {
+                // 如果没有端口，默认使用3478
+                host = value;
+                port = 3478;
+            }
+            
+            // 验证主机名或IP地址
+            if (!stunRegex.test(host)) {
+                input.classList.add('error');
+                showNotification('STUN服务器地址格式错误，请输入有效的主机名或IP地址', 'error');
+                return;
+            }
+            
+            // 验证端口范围
+            if (isNaN(port) || port < 1 || port > 65535) {
+                input.classList.add('error');
+                showNotification('端口号必须在1-65535之间', 'error');
+                return;
+            }
+            
+            // 验证通过，显示成功样式
+            input.classList.add('success');
+            
+            // 构建完整的STUN服务器地址
+            const fullAddress = `${host}:${port}`;
+            
+            // 保存配置
+            setConfigValue('STUNServer', fullAddress);
+            
+            // 禁用保存按钮避免重复点击
+            button.disabled = true;
+            button.textContent = '已保存';
+            
+            setTimeout(() => {
+                button.disabled = false;
+                button.textContent = '保存';
+            }, 2000);
+            
+            showNotification(`STUN服务器地址已更新为: ${fullAddress}`, 'success');
+        }
+        
+        /**
+         * STUN服务器输入实时验证
+         */
+        function validateSTUNServerInput() {
+            const input = document.getElementById('STUNServer');
+            const value = input.value.trim();
+            
+            if (!value) {
+                input.classList.remove('error', 'success');
+                return;
+            }
+            
+            // 简单的格式预检查
+            const basicRegex = /^[a-zA-Z0-9.-]+(:[0-9]+)?$/;
+            
+            if (!basicRegex.test(value)) {
+                input.classList.add('error');
+                input.classList.remove('success');
+            } else {
+                input.classList.remove('error');
+                // 不显示成功样式，等待用户点击保存确认
+            }
+        }
+        
+        /**
+         * 保存所有设置（仅自动保存）
+         */
+        async function saveAllSettings() {
+            if (!hasChanges) {
+                return; // 静默返回，不显示任何消息
+            }
+            
+            try {
+                // 显示保存中指示器，隐藏未保存指示器
+                const unsavedIndicator = document.getElementById('unsaved-indicator');
+                const savingIndicator = document.getElementById('saving-indicator');
+                if (unsavedIndicator) unsavedIndicator.style.display = 'none';
+                if (savingIndicator) savingIndicator.style.display = 'inline-block';
+                
+                // 使用多种连接方式，适配不同环境
+                const endpoints = [
+                    'http://127.0.0.1:5726/network/config/batch',
+                    'http://localhost:5726/network/config/batch',
+                    '/network/config/batch'
+                ];
+                
+                let response = null;
+                for (const endpoint of endpoints) {
+                    try {
+                        console.log(`尝试保存到: ${endpoint}`);
+                        response = await fetch(endpoint, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(currentConfig)
+                        });
+                        if (response.ok) {
+                            console.log(`✅ 保存成功: ${endpoint}`);
+                            break;
+                        }
+                    } catch (err) {
+                        console.log(`❌ 保存失败: ${endpoint}`, err.message);
+                    }
+                }
+                
+                if (!response || !response.ok) {
+                    throw new Error('所有保存方式都失败了');
+                }
+                
+                const result = await response.json();
+                if (result.success) {
+                    hasChanges = false;
+                    
+                    // 隐藏保存中指示器
+                    if (savingIndicator) savingIndicator.style.display = 'none';
+                    
+                    // 静默保存，不显示成功消息
+                } else {
+                    throw new Error(result.message || '保存失败');
+                }
+            } catch (error) {
+                console.error('保存配置失败:', error);
+                
+                // 隐藏保存中指示器，显示未保存指示器
+                if (unsavedIndicator) unsavedIndicator.style.display = 'inline-block';
+                if (savingIndicator) savingIndicator.style.display = 'none';
+                
+                // 自动保存失败时显示错误消息
+                showNotification('自动保存失败: ' + error.message, 'error');
+            }
+        }
+        
+        /**
+         * 重置为默认设置
+         */
+        async function resetToDefault() {
+            if (!confirm('确定要重置所有网络设置为默认值吗？此操作不可撤销。')) {
+                return;
+            }
+            
+            try {
+                showNotification('正在重置配置...', 'info');
+                
+                // 使用多种连接方式，适配不同环境
+                const endpoints = [
+                    'http://127.0.0.1:5726/network/config/reset',
+                    'http://localhost:5726/network/config/reset',
+                    '/network/config/reset'
+                ];
+                
+                let response = null;
+                for (const endpoint of endpoints) {
+                    try {
+                        console.log(`尝试重置到: ${endpoint}`);
+                        response = await fetch(endpoint, {
+                            method: 'POST'
+                        });
+                        if (response.ok) {
+                            console.log(`✅ 重置成功: ${endpoint}`);
+                            break;
+                        }
+                    } catch (err) {
+                        console.log(`❌ 重置失败: ${endpoint}`, err.message);
+                    }
+                }
+                
+                if (!response || !response.ok) {
+                    throw new Error('所有重置方式都失败了');
+                }
+                
+                const result = await response.json();
+                if (result.success) {
+                    hasChanges = false;
+                    await loadConfig(); // 重新加载配置
+                    showNotification('配置已重置为默认值', 'success');
+                } else {
+                    throw new Error(result.message || '重置失败');
+                }
+            } catch (error) {
+                console.error('重置配置失败:', error);
+                showNotification('重置失败: ' + error.message, 'error');
+            }
+        }
+        
+        /**
+         * 显示全局通知（类似theme-settings.html）
+         */
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => notification.classList.add('show'), 10);
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', init);
+        
+        // 页面卸载时清理定时器
+        window.addEventListener('beforeunload', function() {
+            if (autoSaveTimer) {
+                clearTimeout(autoSaveTimer);
+            }
+            if (statusUpdateInterval) {
+                clearInterval(statusUpdateInterval);
+            }
+        });
+        
+        /**
+         * 启动状态更新定时器
+         */
+        function startStatusUpdates() {
+            // 每10秒更新一次状态
+            statusUpdateInterval = setInterval(() => {
+                updateHolePunchStatus();
+            }, 10000);
+            
+            console.log('启动端口映射状态更新定时器');
+        }
+        
+        /**
+         * 更新端口映射状态
+         */
+        async function updateHolePunchStatus() {
+            try {
+                // 使用多种连接方式，适配不同环境
+                const endpoints = [
+                    'http://127.0.0.1:5726/network/holepunch/status',
+                    'http://localhost:5726/network/holepunch/status',
+                    '/network/holepunch/status'
+                ];
+                
+                let response = null;
+                let lastError = null;
+                
+                for (const endpoint of endpoints) {
+                    try {
+                        console.log(`尝试连接端口映射状态端点: ${endpoint}`);
+                        response = await fetch(endpoint);
+                        if (response.ok) {
+                            console.log(`✅ 端口映射状态连接成功: ${endpoint}`);
+                            statusUpdateRetryCount = 0; // 重置重试计数
+                            break;
+                        } else {
+                            console.warn(`端口映射状态端点返回错误: ${endpoint}, 状态码: ${response.status}`);
+                        }
+                    } catch (err) {
+                        console.log(`❌ 端口映射状态连接失败: ${endpoint}`, err.message);
+                        lastError = err;
+                    }
+                }
+                
+                if (!response || !response.ok) {
+                    statusUpdateRetryCount++;
+                    if (statusUpdateRetryCount >= MAX_STATUS_RETRIES) {
+                        console.error('端口映射状态获取失败，达到最大重试次数');
+                        throw new Error('所有端口映射状态连接方式都失败了');
+                    } else {
+                        console.warn(`端口映射状态获取失败，重试 ${statusUpdateRetryCount}/${MAX_STATUS_RETRIES}`);
+                        return; // 不更新UI，保持当前状态
+                    }
+                }
+                
+                const data = await response.json();
+                if (data.success) {
+                    holePunchStatus = data.status;
+                    updateHolePunchUI();
+                } else {
+                    console.warn('端口映射状态API返回失败:', data);
+                    updateHolePunchUI(true);
+                }
+            } catch (error) {
+                console.error('获取端口映射状态失败:', error);
+                statusUpdateRetryCount++;
+                if (statusUpdateRetryCount >= MAX_STATUS_RETRIES) {
+                    // 显示错误状态
+                    updateHolePunchUI(true);
+                }
+            }
+        }
+        
+        /**
+         * 更新端口映射UI
+         */
+        function updateHolePunchUI(hasError = false) {
+            // 如果还没有状态数据，显示检测中
+            if (!holePunchStatus || !holePunchStatus.upnp || !holePunchStatus.pcp || hasError) {
+                // 错误状态或初始化状态 - 显示更友好的信息
+                const upnpIndicator = document.getElementById('upnp-indicator');
+                const upnpText = document.getElementById('upnp-status-text');
+                const upnpDetails = document.getElementById('upnp-status-details');
+                
+                if (upnpIndicator) upnpIndicator.className = 'status-indicator warning';
+                if (upnpText) upnpText.textContent = '检测中...';
+                if (upnpDetails) upnpDetails.textContent = hasError ? '检测失败，请稍后重试' : '正在检测网络环境';
+                
+                const pcpIndicator = document.getElementById('pcp-indicator');
+                const pcpText = document.getElementById('pcp-status-text');
+                const pcpDetails = document.getElementById('pcp-status-details');
+                
+                if (pcpIndicator) pcpIndicator.className = 'status-indicator warning';
+                if (pcpText) pcpText.textContent = '检测中...';
+                if (pcpDetails) pcpDetails.textContent = hasError ? '检测失败，请稍后重试' : '正在检测网络环境';
+                
+                return;
+            }
+            
+            // UPnP状态
+            if (holePunchStatus.upnp) {
+                const upnpIndicator = document.getElementById('upnp-indicator');
+                const upnpText = document.getElementById('upnp-status-text');
+                const upnpDetails = document.getElementById('upnp-status-details');
+                
+                if (upnpIndicator) {
+                    if (holePunchStatus.upnp.enabled && holePunchStatus.upnp.available) {
+                        upnpIndicator.className = 'status-indicator active';
+                    } else if (holePunchStatus.upnp.enabled) {
+                        upnpIndicator.className = 'status-indicator warning';
+                    } else {
+                        upnpIndicator.className = 'status-indicator inactive';
+                    }
+                }
+                
+                if (upnpText) {
+                    if (holePunchStatus.upnp.enabled && holePunchStatus.upnp.available) {
+                        upnpText.textContent = '已启用且可用';
+                    } else if (holePunchStatus.upnp.enabled) {
+                        upnpText.textContent = '已启用但不可用';
+                    } else {
+                        upnpText.textContent = '未启用';
+                    }
+                }
+                
+                if (upnpDetails) {
+                    if (holePunchStatus.upnp.device) {
+                        upnpDetails.textContent = `设备: ${holePunchStatus.upnp.device.ip}`;
+                    } else {
+                        upnpDetails.textContent = '未找到UPnP设备';
+                    }
+                }
+            }
+            
+            // PCP状态
+            if (holePunchStatus.pcp) {
+                const pcpIndicator = document.getElementById('pcp-indicator');
+                const pcpText = document.getElementById('pcp-status-text');
+                const pcpDetails = document.getElementById('pcp-status-details');
+                
+                if (pcpIndicator) {
+                    if (holePunchStatus.pcp.enabled && holePunchStatus.pcp.available) {
+                        pcpIndicator.className = 'status-indicator active';
+                    } else if (holePunchStatus.pcp.enabled) {
+                        pcpIndicator.className = 'status-indicator warning';
+                    } else {
+                        pcpIndicator.className = 'status-indicator inactive';
+                    }
+                }
+                
+                if (pcpText) {
+                    if (holePunchStatus.pcp.enabled && holePunchStatus.pcp.available) {
+                        pcpText.textContent = '已启用且可用';
+                    } else if (holePunchStatus.pcp.enabled) {
+                        pcpText.textContent = '已启用但不可用';
+                    } else {
+                        pcpText.textContent = '未启用';
+                    }
+                }
+                
+                if (pcpDetails) {
+                    if (holePunchStatus.pcp.gateway) {
+                        pcpDetails.textContent = `网关: ${holePunchStatus.pcp.gateway.ip}:${holePunchStatus.pcp.gateway.port} (${holePunchStatus.pcp.gateway.protocol})`;
+                    } else {
+                        pcpDetails.textContent = '未找到PCP网关';
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>

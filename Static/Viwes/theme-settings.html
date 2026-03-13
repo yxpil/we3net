@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>主题设置</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: "SF Pro Text", "Arial", sans-serif;
+            background: #ffffff;
+            padding: 32px;
+            color: #333333;
+            line-height: 1.6;
+        }
+        
+        .page-header {
+            margin-bottom: 32px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .page-header h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #000000;
+            margin-bottom: 8px;
+        }
+        
+        .page-description {
+            font-size: 14px;
+            color: #666666;
+        }
+        
+        .theme-section {
+            margin-bottom: 32px;
+            padding: 24px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #000000;
+            margin-bottom: 16px;
+        }
+        
+        .theme-preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        
+        .theme-card {
+            animation: fadeInUp 0.6s ease-out;
+            animation-fill-mode: both;
+        }
+        
+        .theme-card:nth-child(1) { animation-delay: 0.1s; }
+        .theme-card:nth-child(2) { animation-delay: 0.2s; }
+        .theme-card:nth-child(3) { animation-delay: 0.3s; }
+        .theme-card:nth-child(4) { animation-delay: 0.4s; }
+        .theme-card:nth-child(5) { animation-delay: 0.5s; }
+        .theme-card:nth-child(6) { animation-delay: 0.6s; }
+        .theme-card:nth-child(7) { animation-delay: 0.7s; }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .theme-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #ffffff;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+        
+        .theme-card:hover {
+            border-color: #333333;
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .theme-card.active {
+            border-color: #000000;
+            background: #f8f9fa;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            transform: translateY(-1px);
+        }
+        
+        .theme-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: left 0.6s ease;
+        }
+        
+        .theme-card:hover::before {
+            left: 100%;
+        }
+        
+        .theme-card.pink:hover {
+            border-color: #e91e63;
+            box-shadow: 0 4px 12px rgba(233, 30, 99, 0.2);
+            transform: translateY(-2px) scale(1.02);
+        }
+        
+        .theme-card.red:hover {
+            border-color: #f44336;
+            box-shadow: 0 4px 12px rgba(244, 67, 54, 0.2);
+            transform: translateY(-2px) scale(1.02);
+        }
+        
+        .theme-card.orange:hover {
+            border-color: #ff6b35;
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.2);
+            transform: translateY(-2px) scale(1.02);
+        }
+        
+        .theme-card.light:hover {
+            border-color: #000000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transform: translateY(-2px) scale(1.02);
+        }
+        
+        .theme-card.blue:hover {
+            border-color: #007bff;
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+            transform: translateY(-2px) scale(1.02);
+        }
+        
+        .theme-card.green:hover {
+            border-color: #28a745;
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.2);
+            transform: translateY(-2px) scale(1.02);
+        }
+        
+        .theme-card.purple:hover {
+            border-color: #6f42c1;
+            box-shadow: 0 4px 12px rgba(111, 66, 193, 0.2);
+            transform: translateY(-2px) scale(1.02);
+        }
+        
+        .theme-preview-box {
+            width: 100%;
+            height: 80px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border: 1px solid #e0e0e0;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .theme-card:hover .theme-preview-box {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .theme-card.active .theme-preview-box {
+            transform: scale(1.08);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .theme-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #000000;
+            margin-bottom: 6px;
+            transition: all 0.3s ease;
+            letter-spacing: -0.2px;
+        }
+        
+        .theme-card:hover .theme-name {
+            color: #333333;
+            transform: translateY(-1px);
+        }
+        
+        .theme-card.active .theme-name {
+            color: #000000;
+            font-weight: 700;
+        }
+        
+        .theme-description {
+            font-size: 12px;
+            color: #666666;
+            line-height: 1.4;
+            transition: all 0.3s ease;
+        }
+        
+        .theme-card:hover .theme-description {
+            color: #555555;
+        }
+        
+        .theme-card.active .theme-description {
+            color: #444444;
+            font-weight: 500;
+        }
+        
+        .color-input-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .color-input-group label {
+            min-width: 100px;
+            font-size: 14px;
+            color: #333333;
+        }
+        
+        .color-input {
+            width: 60px;
+            height: 36px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        
+        .color-value {
+            font-size: 12px;
+            color: #666666;
+            font-family: monospace;
+        }
+        
+        .background-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .background-option {
+            padding: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+        
+        .background-option:hover {
+            border-color: #333333;
+        }
+        
+        .background-option.active {
+            border-color: #000000;
+            background: #f8f9fa;
+        }
+        
+        .file-upload-group {
+            margin-bottom: 16px;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .file-upload-btn {
+            background: #000000;
+            color: #ffffff;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+        
+        .file-upload-btn:hover {
+            background: #333333;
+        }
+        
+        .image-preview {
+            margin-top: 12px;
+            max-width: 200px;
+            max-height: 150px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .image-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .range-input-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .range-input-group label {
+            min-width: 100px;
+            font-size: 14px;
+            color: #333333;
+        }
+        
+        .range-input {
+            flex: 1;
+            max-width: 200px;
+        }
+        
+        .range-value {
+            min-width: 40px;
+            font-size: 12px;
+            color: #666666;
+            text-align: right;
+        }
+        
+        .css-textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+            font-size: 12px;
+            resize: vertical;
+            background: #f8f9fa;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        
+        .save-button, .preview-button, .reset-button {
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .save-button {
+            background: #000000;
+            color: #ffffff;
+        }
+        
+        .save-button:hover {
+            background: #333333;
+        }
+        
+        .preview-button {
+            background: #6c757d;
+            color: #ffffff;
+        }
+        
+        .preview-button:hover {
+            background: #5a6268;
+        }
+        
+        .reset-button {
+            background: #dc3545;
+            color: #ffffff;
+        }
+        
+        .reset-button:hover {
+            background: #c82333;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 20px;
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 14px;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.success {
+            background: #28a745;
+        }
+        
+        .notification.error {
+            background: #dc3545;
+        }
+        
+        .notification.info {
+            background: #17a2b8;
+        }
+        
+        /* 预设按钮样式 - 完全统一规则 */
+        .theme-presets {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        /* 所有按钮初始样式完全统一 */
+        .preset-btn {
+            padding: 8px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            color: #333333;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* 所有按钮hover效果完全统一 */
+        .preset-btn:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            background: linear-gradient(135deg, #e9ecef, #dee2e6);
+            border-color: #333333;
+        }
+        
+        .preset-btn:active {
+            transform: translateY(0) scale(0.98);
+        }
+        
+        .preset-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.6s ease;
+        }
+        
+        .preset-btn:hover::before {
+            left: 100%;
+        }
+        
+        /* 颜色圆点样式 */
+        .color-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid #ffffff;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.1);
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+        
+        .preset-btn:hover .color-dot {
+            transform: scale(1.2);
+        }
+        
+        .preset-btn.active .color-dot {
+            transform: scale(1.3);
+            box-shadow: 0 0 0 3px rgba(255,255,255,0.9), 0 4px 12px rgba(0,0,0,0.3);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%   { transform: scale(1.3); }
+            50%  { transform: scale(1.4); }
+            100% { transform: scale(1.3); }
+        }
+        
+        /* 只有active状态才显示主题色，全部统一规则 */
+        .preset-btn.active {
+            color: #fff;
+            border-color: transparent;
+        }
+        
+        .preset-btn.active.light {
+            background: linear-gradient(135deg, #000, #333);
+        }
+        
+        .preset-btn.active.blue {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+        }
+        
+        .preset-btn.active.green {
+            background: linear-gradient(135deg, #28a745, #1e7e34);
+        }
+        
+        .preset-btn.active.purple {
+            background: linear-gradient(135deg, #6f42c1, #5a32a3);
+        }
+        
+        .preset-btn.active.orange {
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+        }
+        
+        .preset-btn.active.pink {
+            background: linear-gradient(135deg, #e91e63, #f06292);
+        }
+        
+        .preset-btn.active.red {
+            background: linear-gradient(135deg, #f44336, #ef5350);
+        }
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <h2>主题设置</h2>
+        <p class="page-description">自定义您的应用外观，支持CSS和背景图片</p>
+    </div>
+    
+    <!-- 预设主题 -->
+    <div class="theme-section">
+        <h3 class="section-title">预设主题</h3>
+        <div class="theme-presets">
+            <button class="preset-btn active" onclick="loadPreset('light', event)">
+                <span class="color-dot" style="background: #000000;"></span>
+                浅色主题
+            </button>
+            <button class="preset-btn" onclick="loadPreset('blue', event)">
+                <span class="color-dot" style="background: #007bff;"></span>
+                蓝色主题
+            </button>
+            <button class="preset-btn" onclick="loadPreset('green', event)">
+                <span class="color-dot" style="background: #28a745;"></span>
+                绿色主题
+            </button>
+            <button class="preset-btn" onclick="loadPreset('purple', event)">
+                <span class="color-dot" style="background: #6f42c1;"></span>
+                紫色主题
+            </button>
+            <button class="preset-btn" onclick="loadPreset('orange', event)">
+                <span class="color-dot" style="background: #ff6b35;"></span>
+                橙色主题
+            </button>
+            <button class="preset-btn" onclick="loadPreset('pink', event)">
+                <span class="color-dot" style="background: #e91e63;"></span>
+                粉色主题
+            </button>
+            <button class="preset-btn" onclick="loadPreset('red', event)">
+                <span class="color-dot" style="background: #f44336;"></span>
+                红色主题
+            </button>
+        </div>
+        
+        <!-- 主题预览卡片 -->
+        <div class="theme-preview" style="margin-top: 20px;">
+            <div class="theme-card light" id="lightPreview" onclick="loadPreset('light', event)" style="cursor: pointer;">
+                <div class="theme-preview-box" style="background: linear-gradient(135deg, #000000, #333333, #666666);"></div>
+                <div class="theme-name">浅色主题</div>
+                <div class="theme-description">经典简洁的浅色主题，清晰明了的视觉体验</div>
+            </div>
+            <div class="theme-card blue" id="bluePreview" onclick="loadPreset('blue', event)" style="cursor: pointer;">
+                <div class="theme-preview-box" style="background: linear-gradient(135deg, #007bff, #0056b3, #b3d7ff);"></div>
+                <div class="theme-name">蓝色主题</div>
+                <div class="theme-description">专业冷静的蓝色主题，适合商务和工作环境</div>
+            </div>
+            <div class="theme-card green" id="greenPreview" onclick="loadPreset('green', event)" style="cursor: pointer;">
+                <div class="theme-preview-box" style="background: linear-gradient(135deg, #28a745, #1e7e34, #b3ffb3);"></div>
+                <div class="theme-name">绿色主题</div>
+                <div class="theme-description">清新自然的绿色主题，带来生机勃勃的感觉</div>
+            </div>
+            <div class="theme-card purple" id="purplePreview" onclick="loadPreset('purple', event)" style="cursor: pointer;">
+                <div class="theme-preview-box" style="background: linear-gradient(135deg, #6f42c1, #5a32a3, #e6d4ff);"></div>
+                <div class="theme-name">紫色主题</div>
+                <div class="theme-description">优雅神秘的紫色主题，展现独特个性魅力</div>
+            </div>
+            <div class="theme-card orange" id="orangePreview" onclick="loadPreset('orange', event)" style="cursor: pointer;">
+                <div class="theme-preview-box" style="background: linear-gradient(135deg, #ff6b35, #f7931e, #ffcc80);"></div>
+                <div class="theme-name">橙色主题</div>
+                <div class="theme-description">温暖活力的橙色主题，充满阳光与创意</div>
+            </div>
+            <div class="theme-card pink" id="pinkPreview" onclick="loadPreset('pink', event)" style="cursor: pointer;">
+                <div class="theme-preview-box" style="background: linear-gradient(135deg, #e91e63, #f06292, #f8bbd0);"></div>
+                <div class="theme-name">粉色主题</div>
+                <div class="theme-description">浪漫温馨的粉色主题，适合喜欢甜美风格的用户</div>
+            </div>
+            <div class="theme-card red" id="redPreview" onclick="loadPreset('red', event)" style="cursor: pointer;">
+                <div class="theme-preview-box" style="background: linear-gradient(135deg, #f44336, #ef5350, #ffcdd2);"></div>
+                <div class="theme-name">红色主题</div>
+                <div class="theme-description">热情活力的红色主题，充满能量与激情</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 颜色设置 -->
+    <div class="theme-section">
+        <h3 class="section-title">颜色设置</h3>
+        <div class="color-input-group">
+            <label>主色调：</label>
+            <input type="color" class="color-input" id="primaryColor" value="#000000">
+            <span class="color-value" id="primaryColorValue">#000000</span>
+        </div>
+        <div class="color-input-group">
+            <label>辅助色调：</label>
+            <input type="color" class="color-input" id="secondaryColor" value="#333333">
+            <span class="color-value" id="secondaryColorValue">#333333</span>
+        </div>
+        <div class="color-input-group">
+            <label>背景颜色：</label>
+            <input type="color" class="color-input" id="backgroundColor" value="#ffffff">
+            <span class="color-value" id="backgroundColorValue">#ffffff</span>
+        </div>
+        <div class="color-input-group">
+            <label>文字颜色：</label>
+            <input type="color" class="color-input" id="textColor" value="#333333">
+            <span class="color-value" id="textColorValue">#333333</span>
+        </div>
+        <div class="color-input-group">
+            <label>卡片背景：</label>
+            <input type="color" class="color-input" id="cardBackground" value="#ffffff">
+            <span class="color-value" id="cardBackgroundValue">#ffffff</span>
+        </div>
+        <div class="color-input-group">
+            <label>边框颜色：</label>
+            <input type="color" class="color-input" id="borderColor" value="#e0e0e0">
+            <span class="color-value" id="borderColorValue">#e0e0e0</span>
+        </div>
+    </div>
+    
+    <!-- 背景设置 -->
+    <div class="theme-section">
+        <h3 class="section-title">背景设置</h3>
+        <div class="background-options">
+            <div class="background-option active" onclick="selectBackgroundType('none', event)">
+                <div>无背景</div>
+                <div style="font-size: 12px; color: #666;">纯色背景</div>
+            </div>
+            <div class="background-option" onclick="selectBackgroundType('color', event)">
+                <div>纯色背景</div>
+                <div style="font-size: 12px; color: #666;">自定义颜色</div>
+            </div>
+            <div class="background-option" onclick="selectBackgroundType('gradient', event)">
+                <div>渐变背景</div>
+                <div style="font-size: 12px; color: #666;">CSS渐变</div>
+            </div>
+            <div class="background-option" onclick="selectBackgroundType('image', event)">
+                <div>图片背景</div>
+                <div style="font-size: 12px; color: #666;">Base64图片</div>
+            </div>
+        </div>
+        
+        <div id="backgroundSettings" style="display: none;">
+            <div class="color-input-group" id="backgroundColorGroup" style="display: none;">
+                <label>背景颜色：</label>
+                <input type="color" class="color-input" id="backgroundColorPicker" value="#f0f0f0">
+                <span class="color-value" id="backgroundColorPickerValue">#f0f0f0</span>
+            </div>
+            
+            <div class="file-upload-group" id="imageUploadGroup" style="display: none;">
+                <label>上传图片：</label>
+                <input type="file" class="file-input" id="backgroundImage" accept="image/*" onchange="handleImageUpload(event)">
+                <button class="file-upload-btn" onclick="document.getElementById('backgroundImage').click()">选择图片</button>
+                <div class="image-preview" id="imagePreview" style="display: none;">
+                    <img id="previewImg" alt="预览">
+                </div>
+            </div>
+            
+            <div class="range-input-group">
+                <label>透明度：</label>
+                <input type="range" class="range-input" id="backgroundOpacity" min="0" max="1" step="0.1" value="1">
+                <span class="range-value" id="backgroundOpacityValue">1</span>
+            </div>
+            
+            <div class="range-input-group" id="blurGroup" style="display: none;">
+                <label>模糊度：</label>
+                <input type="range" class="range-input" id="backgroundBlur" min="0" max="20" step="1" value="0">
+                <span class="range-value" id="backgroundBlurValue">0px</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 自定义CSS -->
+    <div class="theme-section">
+        <h3 class="section-title">自定义CSS</h3>
+        <textarea class="css-textarea" id="customCSS" placeholder="输入自定义CSS样式..."></textarea>
+    </div>
+    
+    <!-- 操作按钮 -->
+    <div class="button-group">
+        <button class="preview-button" onclick="previewTheme()" style="display: none;">预览效果</button>
+        <button class="save-button" onclick="saveTheme()">保存主题</button>
+        <button class="reset-button" onclick="resetTheme()">重置默认</button>
+    </div>
+    
+    <script>
+        let currentTheme = {
+            name: '自定义主题',
+            type: 'custom',
+            styles: {
+                primaryColor: '#000000',
+                secondaryColor: '#333333',
+                backgroundColor: '#ffffff',
+                textColor: '#333333',
+                cardBackground: '#ffffff',
+                borderColor: '#e0e0e0',
+                shadowColor: 'rgba(0, 0, 0, 0.1)'
+            },
+            background: {
+                type: 'none',
+                value: '',
+                opacity: 1,
+                blur: 0
+            },
+            customCSS: ''
+        };
+        
+        let backgroundImageBase64 = '';
+        
+        // 预设主题
+        const presets = {
+            light: {
+                name: '浅色主题',
+                type: 'light',
+                styles: {
+                    primaryColor: '#000000',
+                    secondaryColor: '#333333',
+                    backgroundColor: '#ffffff',
+                    textColor: '#333333',
+                    cardBackground: '#ffffff',
+                    borderColor: '#e0e0e0',
+                    shadowColor: 'rgba(0, 0, 0, 0.1)'
+                },
+                background: { type: 'none', value: '', opacity: 1, blur: 0 },
+                customCSS: ''
+            },
+            orange: {
+                name: '橙色主题',
+                type: 'orange',
+                styles: {
+                    primaryColor: '#ff6b35',
+                    secondaryColor: '#f7931e',
+                    backgroundColor: '#fff3e0',
+                    textColor: '#333333',
+                    cardBackground: '#ffffff',
+                    borderColor: '#ffe0b2',
+                    shadowColor: 'rgba(255, 107, 53, 0.1)'
+                },
+                background: { type: 'none', value: '', opacity: 1, blur: 0 },
+                customCSS: ''
+            },
+            blue: {
+                name: '蓝色主题',
+                type: 'blue',
+                styles: {
+                    primaryColor: '#007bff',
+                    secondaryColor: '#0056b3',
+                    backgroundColor: '#f0f8ff',
+                    textColor: '#333333',
+                    cardBackground: '#ffffff',
+                    borderColor: '#b3d7ff',
+                    shadowColor: 'rgba(0, 123, 255, 0.1)'
+                },
+                background: { type: 'none', value: '', opacity: 1, blur: 0 },
+                customCSS: ''
+            },
+            green: {
+                name: '绿色主题',
+                type: 'green',
+                styles: {
+                    primaryColor: '#28a745',
+                    secondaryColor: '#1e7e34',
+                    backgroundColor: '#f0fff0',
+                    textColor: '#333333',
+                    cardBackground: '#ffffff',
+                    borderColor: '#b3ffb3',
+                    shadowColor: 'rgba(40, 167, 69, 0.1)'
+                },
+                background: { type: 'none', value: '', opacity: 1, blur: 0 },
+                customCSS: ''
+            },
+            purple: {
+                name: '紫色主题',
+                type: 'purple',
+                styles: {
+                    primaryColor: '#6f42c1',
+                    secondaryColor: '#5a32a3',
+                    backgroundColor: '#f8f0ff',
+                    textColor: '#333333',
+                    cardBackground: '#ffffff',
+                    borderColor: '#e6d4ff',
+                    shadowColor: 'rgba(111, 66, 193, 0.1)'
+                },
+                background: { type: 'none', value: '', opacity: 1, blur: 0 },
+                customCSS: ''
+            },
+            pink: {
+                name: '粉色主题',
+                type: 'pink',
+                styles: {
+                    primaryColor: '#e91e63',
+                    secondaryColor: '#c2185b',
+                    backgroundColor: '#fff0f5',
+                    textColor: '#333333',
+                    cardBackground: '#ffffff',
+                    borderColor: '#ffb3d9',
+                    shadowColor: 'rgba(233, 30, 99, 0.1)'
+                },
+                background: { type: 'none', value: '', opacity: 1, blur: 0 },
+                customCSS: ''
+            },
+            red: {
+                name: '红色主题',
+                type: 'red',
+                styles: {
+                    primaryColor: '#f44336',
+                    secondaryColor: '#d32f2f',
+                    backgroundColor: '#ffebee',
+                    textColor: '#333333',
+                    cardBackground: '#ffffff',
+                    borderColor: '#ffcdd2',
+                    shadowColor: 'rgba(244, 67, 54, 0.1)'
+                },
+                background: { type: 'none', value: '', opacity: 1, blur: 0 },
+                customCSS: ''
+            }
+        };
+        
+        // 页面加载时初始化
+        window.addEventListener('DOMContentLoaded', async function() {
+            console.log('主题设置页面加载完成');
+            console.log('当前环境:', {
+                isIframe: window.parent !== window,
+                parentOrigin: window.parent?.location?.origin,
+                currentOrigin: window.location.origin
+            });
+            
+            // 初始化所有主题按钮的颜色样式
+            initializeThemeButtons();
+            
+            await loadCurrentTheme();
+            setupColorListeners();
+            setupBackgroundListeners();
+        });
+        
+        // 初始化主题按钮颜色样式
+        function initializeThemeButtons() {
+            // 为所有预设按钮添加对应的颜色类（仅标记，不影响初始样式）
+            const themeButtons = [
+                { selector: '[onclick*="light"]', className: 'light', color: '#000000' },
+                { selector: '[onclick*="blue"]', className: 'blue', color: '#007bff' },
+                { selector: '[onclick*="green"]', className: 'green', color: '#28a745' },
+                { selector: '[onclick*="purple"]', className: 'purple', color: '#6f42c1' },
+                { selector: '[onclick*="orange"]', className: 'orange', color: '#ff6b35' },
+                { selector: '[onclick*="pink"]', className: 'pink', color: '#e91e63' },
+                { selector: '[onclick*="red"]', className: 'red', color: '#f44336' }
+            ];
+            
+            themeButtons.forEach(theme => {
+                const buttons = document.querySelectorAll(theme.selector);
+                buttons.forEach(btn => {
+                    // 存储主题名称到data属性，避免直接添加类影响样式
+                    btn.dataset.theme = theme.className;
+                });
+            });
+            
+            // 初始化预览卡片
+            initializePreviewCards();
+        }
+        
+        // 初始化预览卡片
+        function initializePreviewCards() {
+            const previewCards = document.querySelectorAll('.theme-card');
+            previewCards.forEach(card => {
+                card.classList.add('initialized');
+            });
+        }
+        
+        // 加载当前主题
+        async function loadCurrentTheme() {
+            try {
+                console.log('正在加载当前主题...');
+                console.log('API地址:', 'http://127.0.0.1:5726/theme/current');
+                console.log('当前页面URL:', window.location.href);
+                console.log('iframe环境:', window.parent !== window);
+                
+                // 首先测试API连接
+                const workingEndpoint = await testAPIConnection();
+                if (!workingEndpoint) {
+                    throw new Error('无法连接到任何主题API端点');
+                }
+                
+                const response = await fetch(workingEndpoint);
+                console.log('主题响应状态:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const theme = await response.json();
+                console.log('获取到的主题数据:', theme);
+                currentTheme = theme;
+                updateUI();
+            } catch (error) {
+                console.error('加载主题失败:', error);
+                console.error('错误类型:', error.name);
+                console.error('错误消息:', error.message);
+                console.error('错误堆栈:', error.stack);
+                showNotification(`加载主题失败: ${error.message}`, 'error');
+                // 使用默认主题
+                currentTheme = { ...presets.light };
+                updateUI();
+            }
+        }
+        
+        // 测试API连接
+        async function testAPIConnection() {
+            const endpoints = [
+                'http://127.0.0.1:5726/theme/current',
+                '/theme/current',
+                '../theme/current'
+            ];
+            
+            for (const endpoint of endpoints) {
+                try {
+                    console.log(`测试API端点: ${endpoint}`);
+                    const response = await fetch(endpoint);
+                    if (response.ok) {
+                        console.log(`✅ API连接成功: ${endpoint}`);
+                        return endpoint;
+                    }
+                } catch (error) {
+                    console.log(`❌ API连接失败: ${endpoint}`, error.message);
+                }
+            }
+            return null;
+        }
+        
+        // 设置颜色选择器监听器
+        function setupColorListeners() {
+            const colorInputs = ['primaryColor', 'secondaryColor', 'backgroundColor', 'textColor', 'cardBackground', 'borderColor'];
+            colorInputs.forEach(id => {
+                const input = document.getElementById(id);
+                const valueSpan = document.getElementById(id + 'Value');
+                
+                input.addEventListener('input', function() {
+                    currentTheme.styles[id] = this.value;
+                    valueSpan.textContent = this.value;
+                });
+            });
+            
+            const backgroundColorPicker = document.getElementById('backgroundColorPicker');
+            const backgroundColorValue = document.getElementById('backgroundColorPickerValue');
+            backgroundColorPicker.addEventListener('input', function() {
+                currentTheme.background.value = this.value;
+                backgroundColorValue.textContent = this.value;
+            });
+        }
+        
+        // 设置背景监听器
+        function setupBackgroundListeners() {
+            const opacitySlider = document.getElementById('backgroundOpacity');
+            const opacityValue = document.getElementById('backgroundOpacityValue');
+            opacitySlider.addEventListener('input', function() {
+                currentTheme.background.opacity = parseFloat(this.value);
+                opacityValue.textContent = this.value;
+            });
+            
+            const blurSlider = document.getElementById('backgroundBlur');
+            const blurValue = document.getElementById('backgroundBlurValue');
+            blurSlider.addEventListener('input', function() {
+                currentTheme.background.blur = parseInt(this.value);
+                blurValue.textContent = this.value + 'px';
+            });
+        }
+        
+        // 加载预设主题
+        function loadPreset(presetName, event) {
+            // 更新按钮状态
+            document.querySelectorAll('.preset-btn').forEach(btn => {
+                btn.classList.remove('active');
+                // 移除所有特殊主题样式
+                btn.classList.remove('light', 'blue', 'green', 'purple', 'pink', 'red', 'orange');
+            });
+            
+            // 更新预览卡片状态
+            document.querySelectorAll('.theme-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            
+            if (event && event.target) {
+                const targetBtn = event.target.closest('.preset-btn');
+                if (targetBtn) {
+                    targetBtn.classList.add('active', presetName);
+                }
+                
+                // 更新对应的预览卡片
+                const previewCard = document.getElementById(presetName + 'Preview');
+                if (previewCard) {
+                    previewCard.classList.add('active');
+                }
+            } else {
+                // 如果没有事件，直接通过预设名称选择
+                const targetBtn = document.querySelector(`.preset-btn[onclick*="'${presetName}'"]`);
+                if (targetBtn) {
+                    targetBtn.classList.add('active', presetName);
+                    
+                    // 更新对应的预览卡片
+                    const previewCard = document.getElementById(presetName + 'Preview');
+                    if (previewCard) {
+                        previewCard.classList.add('active');
+                    }
+                }
+            }
+            
+            currentTheme = { ...presets[presetName] };
+            updateUI();
+        }
+        
+        // 选择背景类型
+        function selectBackgroundType(type, event) {
+            currentTheme.background.type = type;
+            
+            // 更新UI
+            document.querySelectorAll('.background-option').forEach(option => option.classList.remove('active'));
+            if (event && event.target) {
+                event.target.closest('.background-option').classList.add('active');
+            } else {
+                // 如果没有事件，直接通过类型选择
+                const targetOption = document.querySelector(`.background-option[onclick*="'${type}'"]`);
+                if (targetOption) {
+                    targetOption.classList.add('active');
+                }
+            }
+            
+            const settingsDiv = document.getElementById('backgroundSettings');
+            const colorGroup = document.getElementById('backgroundColorGroup');
+            const imageGroup = document.getElementById('imageUploadGroup');
+            const blurGroup = document.getElementById('blurGroup');
+            
+            settingsDiv.style.display = type !== 'none' ? 'block' : 'none';
+            colorGroup.style.display = type === 'color' ? 'flex' : 'none';
+            imageGroup.style.display = type === 'image' ? 'block' : 'none';
+            blurGroup.style.display = type === 'image' ? 'flex' : 'none';
+            
+            if (type === 'color') {
+                currentTheme.background.value = document.getElementById('backgroundColorPicker').value;
+            } else if (type === 'gradient') {
+                currentTheme.background.value = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+            }
+        }
+        
+        // 处理图片上传
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            if (file.size > 2 * 1024 * 1024) { // 2MB限制
+                showNotification('图片大小不能超过2MB', 'error');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                backgroundImageBase64 = e.target.result;
+                currentTheme.background.value = backgroundImageBase64;
+                
+                // 显示预览
+                const preview = document.getElementById('imagePreview');
+                const previewImg = document.getElementById('previewImg');
+                previewImg.src = backgroundImageBase64;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        // 更新UI
+        function updateUI() {
+            // 更新颜色选择器
+            Object.keys(currentTheme.styles).forEach(key => {
+                const input = document.getElementById(key);
+                const valueSpan = document.getElementById(key + 'Value');
+                if (input && valueSpan) {
+                    input.value = currentTheme.styles[key];
+                    valueSpan.textContent = currentTheme.styles[key];
+                }
+            });
+            
+            // 更新背景设置
+            if (currentTheme.background) {
+                document.getElementById('backgroundOpacity').value = currentTheme.background.opacity;
+                document.getElementById('backgroundOpacityValue').textContent = currentTheme.background.opacity;
+                
+                if (currentTheme.background.type === 'color') {
+                    document.getElementById('backgroundColorPicker').value = currentTheme.background.value;
+                    document.getElementById('backgroundColorPickerValue').textContent = currentTheme.background.value;
+                }
+                
+                selectBackgroundType(currentTheme.background.type);
+            }
+            
+            // 更新自定义CSS
+            document.getElementById('customCSS').value = currentTheme.customCSS || '';
+        }
+        
+        // 预览主题
+        function previewTheme() {
+            applyTheme(currentTheme);
+            showNotification('主题预览已应用', 'success');
+        }
+        
+        // 保存主题
+        async function saveTheme() {
+            try {
+                currentTheme.customCSS = document.getElementById('customCSS').value;
+                
+                console.log('保存主题数据:', currentTheme);
+                console.log('API地址:', 'http://127.0.0.1:5726/theme/update');
+                
+                // 尝试多个端点
+                const endpoints = [
+                    'http://127.0.0.1:5726/theme/update',
+                    '/theme/update',
+                    '../theme/update'
+                ];
+                
+                let response = null;
+                let lastError = null;
+                
+                for (const endpoint of endpoints) {
+                    try {
+                        console.log(`尝试保存到端点: ${endpoint}`);
+                        response = await fetch(endpoint, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(currentTheme)
+                        });
+                        
+                        if (response.ok) {
+                            console.log(`✅ 保存成功到端点: ${endpoint}`);
+                            break;
+                        } else {
+                            console.log(`❌ 保存失败到端点: ${endpoint}, 状态: ${response.status}`);
+                        }
+                    } catch (error) {
+                        console.log(`❌ 保存错误到端点: ${endpoint}`, error.message);
+                        lastError = error;
+                    }
+                }
+                
+                if (!response || !response.ok) {
+                    throw lastError || new Error('所有保存端点都失败');
+                }
+                
+                const result = await response.json();
+                console.log('服务器响应数据:', result);
+                
+                if (result.success) {
+                    showNotification('主题保存成功！', 'success');
+                    applyTheme(currentTheme);
+                } else {
+                    showNotification('主题保存失败: ' + result.message, 'error');
+                }
+            } catch (error) {
+                console.error('保存主题失败:', error);
+                console.error('错误类型:', error.name);
+                console.error('错误消息:', error.message);
+                console.error('错误堆栈:', error.stack);
+                showNotification(`保存主题失败: ${error.message}`, 'error');
+            }
+        }
+        
+        // 重置主题
+        function resetTheme() {
+            if (confirm('确定要重置为默认主题吗？')) {
+                currentTheme = { ...presets.light };
+                updateUI();
+                showNotification('已重置为默认主题', 'info');
+            }
+        }
+        
+        // 应用主题到父页面
+        function applyTheme(theme) {
+            try {
+                console.log('正在应用主题到父页面:', theme);
+                
+                // 创建主题的深拷贝，避免引用问题
+                const themeCopy = JSON.parse(JSON.stringify(theme));
+                
+                // 向父页面发送主题更新消息
+                if (window.parent && window.parent !== window) {
+                    console.log('发送消息到父页面');
+                    window.parent.postMessage({
+                        type: 'theme-update',
+                        theme: themeCopy
+                    }, '*');
+                } else {
+                    console.log('没有父页面或已在顶层');
+                }
+            } catch (error) {
+                console.error('应用主题失败:', error);
+                showNotification(`应用主题失败: ${error.message}`, 'error');
+            }
+        }
+        
+        // 显示通知
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => notification.classList.add('show'), 10);
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

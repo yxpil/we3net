@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>发布帖子 - 本地内容管理</title>
+    <script src="/Static/Script/global-notifications.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f6f6f6;
+            padding: 24px;
+            color: #333;
+            line-height: 1.5;
+        }
+        
+        .page-header {
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #eaeaea;
+        }
+        
+        .page-header h2 {
+            font-size: 22px;
+            font-weight: 600;
+            color: #111;
+        }
+        
+        .page-description {
+            font-size: 14px;
+            color: #666;
+            margin-top: 4px;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 2px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eaeaea;
+        }
+        
+        .tab {
+            background: none;
+            border: none;
+            padding: 12px 16px;
+            font-size: 14px;
+            color: #666;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+        
+        .tab:hover {
+            color: #333;
+        }
+        
+        .tab.active {
+            color: #111;
+            border-bottom-color: #111;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .info-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 22px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #111;
+            margin-bottom: 8px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #333;
+            background: #fff;
+            transition: border-color 0.2s ease;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #4096ff;
+        }
+        
+        .tag-input-container {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+            min-height: 40px;
+            padding: 8px 12px;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            background: #fff;
+        }
+        
+        .tag {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 12px;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .tag-remove {
+            background: none;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 0;
+            width: 14px;
+            height: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .tag-remove:hover {
+            color: #d93030;
+        }
+        
+        .tag-input {
+            border: none;
+            outline: none;
+            background: none;
+            font-size: 14px;
+            color: #333;
+            flex: 1;
+            min-width: 100px;
+        }
+        
+        .content-editor {
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            background: #fff;
+        }
+        
+        .editor-toolbar {
+            display: flex;
+            gap: 8px;
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+            background: #f8f9fa;
+        }
+        
+        .toolbar-button {
+            background: #fff;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 6px 12px;
+            font-size: 13px;
+            color: #666;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+        
+        .toolbar-button:hover {
+            background: #e9ecef;
+            color: #333;
+        }
+        
+        .toolbar-button svg {
+            width: 16px;
+            height: 16px;
+        }
+        
+        .content-blocks {
+            padding: 12px;
+        }
+        
+        .content-block {
+            margin-bottom: 12px;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            background: #fff;
+        }
+        
+        .block-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .block-remove {
+            background: none;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 0;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .block-remove:hover {
+            color: #d93030;
+        }
+        
+        .block-content {
+            padding: 12px;
+        }
+        
+        .text-input {
+            width: 100%;
+            min-height: 80px;
+            padding: 8px 12px;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #333;
+            resize: vertical;
+            font-family: inherit;
+        }
+        
+        .text-input:focus {
+            outline: none;
+            border-color: #4096ff;
+        }
+        
+        .code-input {
+            width: 100%;
+            min-height: 120px;
+            padding: 8px 12px;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #333;
+            background: #f8f9fa;
+            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+            resize: vertical;
+        }
+        
+        .code-input:focus {
+            outline: none;
+            border-color: #4096ff;
+        }
+        
+        .image-upload {
+            border: 2px dashed #e9ecef;
+            border-radius: 6px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .image-upload:hover {
+            border-color: #4096ff;
+            background: #f8f9ff;
+        }
+        
+        .image-upload.has-image {
+            border-style: solid;
+            border-color: #4096ff;
+            background: #f8f9ff;
+        }
+        
+        .image-preview {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 4px;
+            margin-top: 8px;
+        }
+        
+        .submit-button {
+            background: #111;
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        
+        .submit-button:hover {
+            background: #333;
+        }
+        
+        .submit-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        /* 发布历史样式 */
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .history-item {
+            background: #fff;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 16px;
+            transition: all 0.2s ease;
+        }
+        
+        .history-item:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .history-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 8px;
+        }
+        
+        .history-item-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: #111;
+            margin-bottom: 4px;
+        }
+        
+        .history-item-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .history-item-tags {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+        
+        .history-item-tag {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 11px;
+            color: #666;
+        }
+        
+        .history-item-preview {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.5;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            margin-bottom: 8px;
+        }
+        
+        .history-item-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .history-item-view {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 12px;
+            color: #666;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .history-item-view:hover {
+            background: #e9ecef;
+            color: #333;
+        }
+        
+        .history-item-delete {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        
+        .history-item-delete:hover {
+            background: #c82333;
+        }
+        
+        .history-item-delete:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .history-empty {
+            text-align: center;
+            padding: 48px 24px;
+            color: #999;
+        }
+        
+        .history-empty svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px 20px;
+            color: #666;
+        }
+        
+        .error {
+            background: #fff2f2;
+            border: 1px solid #ffd6d6;
+            border-radius: 8px;
+            padding: 14px;
+            color: #d93030;
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 16px;
+            }
+            
+            .editor-toolbar {
+                padding: 8px 12px;
+            }
+            
+            .toolbar-button {
+                padding: 6px 10px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <h2>发布帖子</h2>
+        <p class="page-description">创建和管理本地博客内容</p>
+    </div>
+    
+    <!-- 选项卡 -->
+    <div class="tabs">
+        <button class="tab active" onclick="switchTab('publish')">发布帖子</button>
+        <button class="tab" onclick="switchTab('history')">发布历史</button>
+    </div>
+    
+    <!-- 发布帖子选项卡 -->
+    <div class="tab-content active" id="publishTab">
+        <div class="info-card">
+            <form id="blogForm">
+                <div class="form-group">
+                    <label class="form-label">标题</label>
+                    <input type="text" id="blogTitle" class="form-input" placeholder="请输入博客标题">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">标签</label>
+                    <div class="tag-input-container" id="tagContainer">
+                        <input type="text" id="tagInput" class="tag-input" placeholder="输入标签后按回车添加">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">内容</label>
+                    <div class="content-editor">
+                        <div class="editor-toolbar">
+                            <button type="button" class="toolbar-button" onclick="addTextBlock()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                    <polyline points="14,2 14,8 20,8"/>
+                                </svg>
+                                添加文字
+                            </button>
+                            <button type="button" class="toolbar-button" onclick="addCodeBlock()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="16,18 22,12 16,6"/>
+                                    <polyline points="8,6 2,12 8,18"/>
+                                </svg>
+                                添加代码
+                            </button>
+                            <button type="button" class="toolbar-button" onclick="addImageBlock()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                                    <polyline points="21,15 16,10 5,21"/>
+                                </svg>
+                                添加图片
+                            </button>
+                        </div>
+                        <div class="content-blocks" id="contentBlocks">
+                            <!-- 内容块将在这里动态添加 -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <button type="submit" class="submit-button" id="submitButton">发布帖子</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 发布历史选项卡 -->
+    <div class="tab-content" id="historyTab">
+        <div class="info-card">
+            <div id="historyContent">
+                <div class="loading">正在加载发布历史...</div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    let tags = [];
+    let contentBlocks = [];
+    let blockIdCounter = 0;
+    
+    /**
+     * 初始化页面
+     */
+    function init() {
+        // 添加默认文字块
+        addTextBlock();
+        
+        // 绑定标签输入事件
+        document.getElementById('tagInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addTag(this.value.trim());
+                this.value = '';
+            }
+        });
+        
+        // 绑定表单提交事件
+        document.getElementById('blogForm').addEventListener('submit', submitBlog);
+        
+        // 初始化发布历史
+        loadPublishHistory();
+    }
+    
+    /**
+     * 切换选项卡
+     */
+    function switchTab(tabName) {
+        // 更新选项卡状态
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        event.target.classList.add('active');
+        
+        // 更新内容显示
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        document.getElementById(tabName + 'Tab').classList.add('active');
+        
+        // 如果切换到历史选项卡，刷新历史记录
+        if (tabName === 'history') {
+            loadPublishHistory();
+        }
+    }
+    
+    /**
+     * 添加标签
+     */
+    function addTag(tagName) {
+        if (!tagName || tags.includes(tagName)) return;
+        
+        tags.push(tagName);
+        renderTags();
+    }
+    
+    /**
+     * 移除标签
+     */
+    function removeTag(tagName) {
+        tags = tags.filter(tag => tag !== tagName);
+        renderTags();
+    }
+    
+    /**
+     * 渲染标签
+     */
+    function renderTags() {
+        const container = document.getElementById('tagContainer');
+        const input = document.getElementById('tagInput');
+        
+        // 清除现有标签
+        container.querySelectorAll('.tag').forEach(tag => tag.remove());
+        
+        // 添加标签
+        tags.forEach(tag => {
+            const tagElement = document.createElement('div');
+            tagElement.className = 'tag';
+            tagElement.innerHTML = `
+                ${escapeHtml(tag)}
+                <button type="button" class="tag-remove" onclick="removeTag('${escapeHtml(tag)}')">×</button>
+            `;
+            container.insertBefore(tagElement, input);
+        });
+    }
+    
+    /**
+     * 添加文字块
+     */
+    function addTextBlock() {
+        const blockId = blockIdCounter++;
+        const block = {
+            id: blockId,
+            type: 'text',
+            content: ''
+        };
+        contentBlocks.push(block);
+        
+        const blockElement = document.createElement('div');
+        blockElement.className = 'content-block';
+        blockElement.id = `block-${blockId}`;
+        blockElement.innerHTML = `
+            <div class="block-header">
+                <span>文字内容</span>
+                <button type="button" class="block-remove" onclick="removeBlock(${blockId})">×</button>
+            </div>
+            <div class="block-content">
+                <textarea class="text-input" placeholder="请输入文字内容..." onchange="updateBlockContent(${blockId}, this.value)">${escapeHtml(block.content)}</textarea>
+            </div>
+        `;
+        
+        document.getElementById('contentBlocks').appendChild(blockElement);
+    }
+    
+    /**
+     * 添加代码块
+     */
+    function addCodeBlock() {
+        const blockId = blockIdCounter++;
+        const block = {
+            id: blockId,
+            type: 'code',
+            content: ''
+        };
+        contentBlocks.push(block);
+        
+        const blockElement = document.createElement('div');
+        blockElement.className = 'content-block';
+        blockElement.id = `block-${blockId}`;
+        blockElement.innerHTML = `
+            <div class="block-header">
+                <span>代码内容</span>
+                <button type="button" class="block-remove" onclick="removeBlock(${blockId})">×</button>
+            </div>
+            <div class="block-content">
+                <textarea class="code-input" placeholder="请输入代码..." onchange="updateBlockContent(${blockId}, this.value)">${escapeHtml(block.content)}</textarea>
+            </div>
+        `;
+        
+        document.getElementById('contentBlocks').appendChild(blockElement);
+    }
+    
+    /**
+     * 添加图片块
+     */
+    function addImageBlock() {
+        const blockId = blockIdCounter++;
+        const block = {
+            id: blockId,
+            type: 'image',
+            content: ''
+        };
+        contentBlocks.push(block);
+        
+        const blockElement = document.createElement('div');
+        blockElement.className = 'content-block';
+        blockElement.id = `block-${blockId}`;
+        blockElement.innerHTML = `
+            <div class="block-header">
+                <span>图片内容</span>
+                <button type="button" class="block-remove" onclick="removeBlock(${blockId})">×</button>
+            </div>
+            <div class="block-content">
+                <div class="image-upload" onclick="selectImage(${blockId})">
+                    <input type="file" id="imageInput-${blockId}" accept="image/*" style="display: none;" onchange="handleImageSelect(${blockId}, this)">
+                    <div id="uploadContent-${blockId}">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                            <circle cx="8.5" cy="8.5" r="1.5"/>
+                            <polyline points="21,15 16,10 5,21"/>
+                        </svg>
+                        <p>点击选择图片</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('contentBlocks').appendChild(blockElement);
+    }
+    
+    /**
+     * 选择图片
+     */
+    function selectImage(blockId) {
+        document.getElementById(`imageInput-${blockId}`).click();
+    }
+    
+    /**
+     * 处理图片选择
+     */
+    function handleImageSelect(blockId, input) {
+        const file = input.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            updateBlockContent(blockId, e.target.result);
+            
+            // 更新上传区域显示
+            const uploadContent = document.getElementById(`uploadContent-${blockId}`);
+            uploadContent.parentElement.classList.add('has-image');
+            uploadContent.innerHTML = `<img src="${e.target.result}" class="image-preview" alt="预览">`;
+        };
+        reader.readAsDataURL(file);
+    }
+    
+    /**
+     * 移除内容块
+     */
+    function removeBlock(blockId) {
+        contentBlocks = contentBlocks.filter(block => block.id !== blockId);
+        const blockElement = document.getElementById(`block-${blockId}`);
+        if (blockElement) {
+            blockElement.remove();
+        }
+    }
+    
+    /**
+     * 更新内容块
+     */
+    function updateBlockContent(blockId, content) {
+        const block = contentBlocks.find(b => b.id === blockId);
+        if (block) {
+            block.content = content;
+        }
+    }
+    
+    /**
+     * 提交博客
+     */
+    async function submitBlog(e) {
+        e.preventDefault();
+        
+        const title = document.getElementById('blogTitle').value.trim();
+        if (!title) {
+            notification.error('请输入博客标题');
+            return;
+        }
+        
+        if (contentBlocks.length === 0) {
+            notification.error('请至少添加一个内容块');
+            return;
+        }
+        
+        // 检查是否有空内容块
+        const emptyBlocks = contentBlocks.filter(block => !block.content.trim());
+        if (emptyBlocks.length > 0) {
+            notification.error('请填写所有内容块的内容');
+            return;
+        }
+        
+        const submitButton = document.getElementById('submitButton');
+        submitButton.disabled = true;
+        submitButton.textContent = '发布中...';
+        
+        const blogData = {
+            title: title,
+            content: contentBlocks,
+            tags: tags,
+            author: '本地用户'
+        };
+        
+        try {
+            // 使用多种连接方式，适配不同环境
+            const endpoints = [
+                'http://127.0.0.1:5726/content/blogs',
+                'http://localhost:5726/content/blogs',
+                '/content/blogs'
+            ];
+            
+            let response = null;
+            let lastError = null;
+            
+            for (const endpoint of endpoints) {
+                try {
+                    console.log(`尝试连接发布端点: ${endpoint}`);
+                    response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(blogData)
+                    });
+                    if (response.ok) {
+                        console.log(`✅ 发布连接成功: ${endpoint}`);
+                        break;
+                    }
+                } catch (err) {
+                    console.log(`❌ 发布连接失败: ${endpoint}`, err.message);
+                    lastError = err;
+                }
+            }
+            
+            if (!response || !response.ok) {
+                console.error('所有发布连接方式都失败了', lastError);
+                notification.error('发布失败，请检查网络连接');
+                return;
+            }
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                notification.success('博客发布成功！');
+                
+                // 重置表单
+                document.getElementById('blogForm').reset();
+                tags = [];
+                contentBlocks = [];
+                blockIdCounter = 0;
+                document.getElementById('contentBlocks').innerHTML = '';
+                renderTags();
+                addTextBlock(); // 添加默认文字块
+                
+                // 切换到历史选项卡
+                switchTab('history');
+                document.querySelector('.tab').classList.remove('active');
+                document.querySelectorAll('.tab')[1].classList.add('active');
+                
+            } else {
+                notification.error(result.message || '发布失败');
+            }
+        } catch (error) {
+            console.error('发布请求失败:', error);
+            notification.error('发布失败，请稍后重试');
+        } finally {
+            submitButton.disabled = false;
+            submitButton.textContent = '发布帖子';
+        }
+    }
+    
+    /**
+     * 加载发布历史
+     */
+    async function loadPublishHistory() {
+        const historyContent = document.getElementById('historyContent');
+        historyContent.innerHTML = '<div class="loading">正在加载发布历史...</div>';
+        
+        try {
+            // 使用多种连接方式，适配不同环境
+            const endpoints = [
+                'http://127.0.0.1:5726/content/blogs?limit=20&offset=0',
+                'http://localhost:5726/content/blogs?limit=20&offset=0',
+                '/content/blogs?limit=20&offset=0'
+            ];
+            
+            let response = null;
+            let lastError = null;
+            
+            for (const endpoint of endpoints) {
+                try {
+                    console.log(`尝试连接历史记录端点: ${endpoint}`);
+                    response = await fetch(endpoint);
+                    if (response.ok) {
+                        console.log(`✅ 历史记录连接成功: ${endpoint}`);
+                        break;
+                    }
+                } catch (err) {
+                    console.log(`❌ 历史记录连接失败: ${endpoint}`, err.message);
+                    lastError = err;
+                }
+            }
+            
+            if (!response || !response.ok) {
+                console.error('所有历史记录连接方式都失败了', lastError);
+                historyContent.innerHTML = '<div class="error">加载历史记录失败: 无法连接到服务器</div>';
+                return;
+            }
+            
+            const result = await response.json();
+            
+            if (result.success && result.data.blogs) {
+                displayHistory(result.data.blogs);
+            } else {
+                historyContent.innerHTML = '<div class="error">加载历史记录失败: ' + (result.message || '未知错误') + '</div>';
+            }
+        } catch (error) {
+            console.error('加载历史记录失败:', error);
+            historyContent.innerHTML = '<div class="error">加载历史记录失败: ' + error.message + '</div>';
+        }
+    }
+    
+    /**
+     * 显示发布历史
+     */
+    function displayHistory(blogs) {
+        const historyContent = document.getElementById('historyContent');
+        
+        if (!blogs || blogs.length === 0) {
+            historyContent.innerHTML = `
+                <div class="history-empty">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14,2 14,8 20,8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                        <polyline points="10,9 9,9 8,9"/>
+                    </svg>
+                    <p>暂无发布历史</p>
+                </div>
+            `;
+            return;
+        }
+        
+        const historyList = document.createElement('div');
+        historyList.className = 'history-list';
+        
+        blogs.forEach(blog => {
+            const historyItem = document.createElement('div');
+            historyItem.className = 'history-item';
+            
+            // 获取第一个文字内容作为预览
+            const firstTextContent = blog.content.find(c => c.type === 'text')?.content || '暂无预览内容';
+            const preview = firstTextContent.substring(0, 100) + (firstTextContent.length > 100 ? '...' : '');
+            
+            historyItem.innerHTML = `
+                <div class="history-item-header">
+                    <div>
+                        <div class="history-item-title">${escapeHtml(blog.title)}</div>
+                        <div class="history-item-meta">
+                            <span>${escapeHtml(blog.author || '匿名用户')}</span>
+                            <span>${formatDate(blog.createdAt)}</span>
+                            <span>${blog.views || 0} 次浏览</span>
+                            <span>${blog.likes || 0} 个点赞</span>
+                        </div>
+                        ${blog.tags && blog.tags.length > 0 ? `
+                            <div class="history-item-tags">
+                                ${blog.tags.map(tag => `<span class="history-item-tag">${escapeHtml(tag)}</span>`).join('')}
+                            </div>
+                        ` : ''}
+                        <div class="history-item-preview">${escapeHtml(preview)}</div>
+                    </div>
+                </div>
+                <div class="history-item-actions">
+                    <button class="history-item-view" onclick="viewBlog('${blog.id}')">查看详情</button>
+                    <button class="history-item-delete" onclick="deleteBlog('${blog.id}', this)">删除</button>
+                </div>
+            `;
+            
+            historyList.appendChild(historyItem);
+        });
+        
+        historyContent.innerHTML = '';
+        historyContent.appendChild(historyList);
+    }
+    
+    /**
+     * 查看博客详情
+     */
+    function viewBlog(blogId) {
+        const detailWindow = window.open(`blogs-published.html?id=${blogId}`, '_blank', 'width=800,height=600,scrollbars=yes');
+        if (!detailWindow) {
+            notification.error('无法打开详情页面，请检查浏览器弹窗设置');
+        }
+    }
+    
+    /**
+     * 删除博客
+     */
+    async function deleteBlog(blogId, button) {
+        if (!confirm('确定要删除这篇博客吗？此操作不可恢复。')) {
+            return;
+        }
+        
+        button.disabled = true;
+        button.textContent = '删除中...';
+        
+        try {
+            // 使用多种连接方式，适配不同环境
+            const endpoints = [
+                `http://127.0.0.1:5726/content/blogs/${blogId}`,
+                `http://localhost:5726/content/blogs/${blogId}`,
+                `/content/blogs/${blogId}`
+            ];
+            
+            let response = null;
+            let lastError = null;
+            
+            for (const endpoint of endpoints) {
+                try {
+                    console.log(`尝试连接删除端点: ${endpoint}`);
+                    response = await fetch(endpoint, {
+                        method: 'DELETE'
+                    });
+                    if (response.ok) {
+                        console.log(`✅ 删除连接成功: ${endpoint}`);
+                        break;
+                    }
+                } catch (err) {
+                    console.log(`❌ 删除连接失败: ${endpoint}`, err.message);
+                    lastError = err;
+                }
+            }
+            
+            if (!response || !response.ok) {
+                console.error('所有删除连接方式都失败了', lastError);
+                notification.error('删除失败，请稍后重试');
+                return;
+            }
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                notification.success('博客删除成功！');
+                // 刷新历史记录
+                loadPublishHistory();
+            } else {
+                notification.error(result.message || '删除失败');
+                button.disabled = false;
+                button.textContent = '删除';
+            }
+        } catch (error) {
+            console.error('删除请求失败:', error);
+            notification.error('删除失败，请稍后重试');
+            button.disabled = false;
+            button.textContent = '删除';
+        }
+    }
+    
+    /**
+     * HTML转义
+     */
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    /**
+     * 格式化日期
+     */
+    function formatDate(dateString) {
+        if (!dateString) return '未知时间';
+        
+        try {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+            
+            // 小于1分钟
+            if (diff < 60000) return '刚刚';
+            
+            // 小于1小时
+            if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前';
+            
+            // 小于1天
+            if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前';
+            
+            // 小于7天
+            if (diff < 604800000) return Math.floor(diff / 86400000) + '天前';
+            
+            // 超过7天显示具体日期
+            return date.toLocaleDateString('zh-CN', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch (error) {
+            return '未知时间';
+        }
+    }
+    
+    // 页面加载完成后初始化
+    document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

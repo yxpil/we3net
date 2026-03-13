@@ -1,0 +1,300 @@
+/**
+ * 现代化简约黑白圆角药丸风格组件
+ * Modern Minimalist Black & White Pill Style Components
+ */
+
+/* 基础重置和全局样式 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: #ffffff;
+    color: #000000;
+    line-height: 1.6;
+}
+
+/* 药丸按钮样式 */
+.pill-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 24px;
+    border-radius: 50px;
+    border: 2px solid #000000;
+    background: #ffffff;
+    color: #000000;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    white-space: nowrap;
+    min-width: 120px;
+}
+
+.pill-button:hover {
+    background: #000000;
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.pill-button:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 黑色药丸按钮 */
+.pill-button.black {
+    background: #000000;
+    color: #ffffff;
+    border-color: #000000;
+}
+
+.pill-button.black:hover {
+    background: #ffffff;
+    color: #000000;
+}
+
+/* 轮廓药丸按钮 */
+.pill-button.outline {
+    background: transparent;
+    border: 2px solid #000000;
+    color: #000000;
+}
+
+.pill-button.outline:hover {
+    background: #000000;
+    color: #ffffff;
+}
+
+/* 小型药丸按钮 */
+.pill-button.small {
+    padding: 8px 16px;
+    font-size: 12px;
+    min-width: 80px;
+}
+
+/* 大型药丸按钮 */
+.pill-button.large {
+    padding: 16px 32px;
+    font-size: 16px;
+    min-width: 160px;
+}
+
+/* 药丸输入框 */
+.pill-input {
+    padding: 12px 24px;
+    border-radius: 50px;
+    border: 2px solid #e0e0e0;
+    background: #ffffff;
+    color: #000000;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.pill-input:focus {
+    border-color: #000000;
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+}
+
+.pill-input::placeholder {
+    color: #999999;
+}
+
+/* 药丸标签 */
+.pill-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 16px;
+    border-radius: 50px;
+    background: #f5f5f5;
+    color: #000000;
+    font-size: 12px;
+    font-weight: 500;
+    margin: 4px;
+    border: 1px solid #e0e0e0;
+}
+
+.pill-tag.active {
+    background: #000000;
+    color: #ffffff;
+    border-color: #000000;
+}
+
+/* 药丸卡片 */
+.pill-card {
+    background: #ffffff;
+    border-radius: 25px;
+    padding: 24px;
+    border: 2px solid #f0f0f0;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.pill-card:hover {
+    border-color: #000000;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+    transform: translateY(-4px);
+}
+
+/* 药丸导航 */
+.pill-nav {
+    display: flex;
+    background: #f8f8f8;
+    border-radius: 50px;
+    padding: 4px;
+    border: 1px solid #e0e0e0;
+}
+
+.pill-nav-item {
+    flex: 1;
+    padding: 10px 20px;
+    border-radius: 50px;
+    background: transparent;
+    color: #666666;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    border: none;
+}
+
+.pill-nav-item:hover {
+    color: #000000;
+}
+
+.pill-nav-item.active {
+    background: #000000;
+    color: #ffffff;
+}
+
+/* 药丸分隔线 */
+.pill-divider {
+    height: 2px;
+    background: linear-gradient(to right, transparent, #000000, transparent);
+    border-radius: 1px;
+    margin: 24px 0;
+}
+
+/* 药丸状态指示器 */
+.pill-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 16px;
+    border-radius: 50px;
+    font-size: 12px;
+    font-weight: 500;
+    gap: 8px;
+}
+
+.pill-status::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.pill-status.success {
+    background: #f0fdf4;
+    color: #16a34a;
+    border: 1px solid #dcfce7;
+}
+
+.pill-status.warning {
+    background: #fffbeb;
+    color: #d97706;
+    border: 1px solid #fef3c7;
+}
+
+.pill-status.error {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fee2e2;
+}
+
+.pill-status.info {
+    background: #f0f9ff;
+    color: #0284c7;
+    border: 1px solid #e0f2fe;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .pill-button {
+        padding: 10px 20px;
+        font-size: 13px;
+        min-width: 100px;
+    }
+    
+    .pill-card {
+        padding: 20px;
+        border-radius: 20px;
+    }
+    
+    .pill-nav {
+        flex-direction: column;
+        border-radius: 20px;
+    }
+    
+    .pill-nav-item {
+        border-radius: 20px;
+    }
+}
+
+/* 动画效果 */
+@keyframes pillFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.pill-fade-in {
+    animation: pillFadeIn 0.5s ease-out;
+}
+
+/* 工具类 */
+.pill-text-center {
+    text-align: center;
+}
+
+.pill-mb-16 {
+    margin-bottom: 16px;
+}
+
+.pill-mb-24 {
+    margin-bottom: 24px;
+}
+
+.pill-gap-16 {
+    gap: 16px;
+}
+
+.pill-flex {
+    display: flex;
+}
+
+.pill-flex-col {
+    flex-direction: column;
+}
+
+.pill-items-center {
+    align-items: center;
+}
+
+.pill-justify-center {
+    justify-content: center;
+}

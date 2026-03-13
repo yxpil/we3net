@@ -1,0 +1,127 @@
+/**
+ * 窗口控制按钮样式组件
+ * 专门用于最小化、最大化、关闭按钮的样式
+ * 调整为纯圆形按钮 + 默认底色
+ */
+
+/* 标题栏样式 - 基础容器 */
+.header {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 12px 20px; /* 减少上下内边距，更紧凑 */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    -webkit-app-region: drag; /* 支持拖拽 */
+    box-sizing: border-box;
+    width: 100%;
+}
+
+/* 标题栏内容区 */
+.header-content {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* 标题文字样式 */
+.header h1 {
+    font-size: 20px; /* 适度缩小，更协调 */
+    font-weight: 400;
+    letter-spacing: 0.5px;
+    margin: 0; /* 清除默认边距 */
+    color: #fff; /* 明确文字颜色 */
+}
+
+/* 版本号样式 */
+.header .version {
+    font-size: 12px;
+    opacity: 0.8;
+    color: #fff; /* 统一文字颜色 */
+    margin-left: 8px;
+}
+
+/* 窗口控制容器 - 适配圆形按钮 */
+.window-controls {
+    display: flex;
+    gap: 8px; /* 减少间距，更紧凑 */
+    padding: 6px 8px; /* 优化内边距 */
+    border-radius: 24px; /* 容器仍保留轻微药丸感，与圆形按钮呼应 */
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.08); /* 轻微降低背景透明度 */
+    -webkit-app-region: no-drag; /* 防止拖拽 */
+    box-sizing: border-box;
+}
+
+/* 窗口控制按钮基础样式 - 纯圆形 + 默认底色 */
+.window-btn {
+    width: 28px; /* 宽高相等，实现正圆形 */
+    height: 28px;
+    border-radius: 50%; /* 50% 圆角 = 圆形 */
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0; /* 清除内边距，避免图标偏移 */
+    /* 所有按钮默认底色 - 浅灰色系，兼顾通透感 */
+    background-color: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(5px);
+    color: #fff; /* 图标默认颜色 */
+    box-sizing: border-box;
+}
+
+/* 按钮悬停效果 - 统一过渡 */
+.window-btn:hover {
+    transform: scale(1.05);
+    opacity: 1;
+    filter: brightness(1.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); /* 降低阴影强度，更自然 */
+}
+
+/* 按钮点击效果 - 更柔和 */
+.window-btn:active {
+    transform: scale(0.98); /* 减少缩放幅度，更细腻 */
+    box-shadow: none;
+}
+.minimize{
+    background: rgba(255, 213, 124, 0.8) !important;
+}
+
+.maximize {
+    background: rgba(106, 212, 123, 0.8) !important;
+}
+
+.close {
+    background: rgba(241, 129, 123, 0.8) !important;
+}
+/* 特定按钮的悬停颜色 - 覆盖默认底色 */
+.minimize:hover {
+    background: rgb(255, 189, 46) !important;
+}
+
+.maximize:hover {
+    background: rgb(40, 202, 67) !important;
+}
+
+.close:hover {
+    background: rgb(255, 95, 87) !important;
+}
+
+/* SVG图标样式 - 适配圆形按钮尺寸 */
+.window-btn svg {
+    width: 12px; /* 优化图标尺寸，适配圆形按钮 */
+    height: 12px;
+    fill: currentColor; /* 继承按钮文字颜色，方便统一控制 */
+    transition: all 0.2s ease;
+}
+
+/* 图标悬停阴影效果 */
+.window-btn:hover svg {
+    filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.8)); /* 增强白色阴影，更清晰 */
+}
