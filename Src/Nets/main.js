@@ -2016,7 +2016,7 @@ function servePluginFile(url, res) {
         logger.warn('PLUGIN_STATIC', 'URL解码失败', { url: url, error: e.message });
     }
     
-    const filePath = path.join(__dirname, '../Plugs', relativePath);
+    const filePath = path.join(__dirname, '../../Plugs', relativePath);
     
     // 调试日志
     logger.info('PLUGIN_STATIC', '请求插件文件', { 
@@ -2029,7 +2029,7 @@ function servePluginFile(url, res) {
     });
     
     // 安全检查
-    const pluginsDir = path.join(__dirname, '../Plugs');
+    const pluginsDir = path.join(__dirname, '../../Plugs');
     if (!filePath.startsWith(pluginsDir)) {
         logger.warn('PLUGIN_STATIC', '路径安全检查失败', { filePath: filePath, pluginsDir: pluginsDir });
         res.writeHead(403, { 'Content-Type': 'text/plain' });

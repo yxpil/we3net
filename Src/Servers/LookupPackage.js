@@ -45,13 +45,18 @@ class LookupPackage {
         this.devices = new Map();
         this.lastSeenTimeout = 30000; // 设备超时时间（毫秒）
         
+        // DOS保护：限制短时间内的数据包数量
+        this.recentPacketCount = 0;
+        this.packetResetInterval = null;
+        
         // 初始化统计信息
         this.stats = {
             totalReceived: 0,
             validPackages: 0,
             invalidPackages: 0,
             uniqueDevices: new Set(),
-            uniqueUsers: new Set()
+            uniqueUsers: new Set(),
+            parseErrors: 0 // 添加解析错误统计
         };
     }
 
@@ -70,7 +75,7 @@ class LookupPackage {
     }
 
     /**
-     * 开始监听UDP广播数据包
+     * 开始监听数据包（支持UDP和TCP）
      */
     startListening() {
         if (this.isListening) {
@@ -104,14 +109,75 @@ class LookupPackage {
         
         this.udpSocket.on('error', (error) => {
             logger.error('NETWORK', 'UDP监听错误', error);
-            this.stopListening();
         });
         
         // 绑定到指定端口
         this.udpSocket.bind(this.port);
         
+        // 创建TCP服务器用于监听直接连接
+        const net = require('net');
+        this.tcpServer = net.createServer((socket) => {
+            logger.debug('NETWORK', '收到TCP连接', {
+                remoteAddress: socket.remoteAddress,
+                remotePort: socket.remotePort
+            });
+            
+            let dataBuffer = '';
+            
+            // 接收TCP数据
+            socket.on('data', (chunk) => {
+                dataBuffer += chunk.toString();
+                
+                // 查找数据包结束标记
+                const endMarker = '\n';
+                const endIndex = dataBuffer.indexOf(endMarker);
+                
+                if (endIndex !== -1) {
+                    const message = dataBuffer.substring(0, endIndex);
+                    dataBuffer = dataBuffer.substring(endIndex + 1);
+                    
+                    // 处理接收到的数据包
+                    this.handleIncomingPacket(Buffer.from(message), {
+                        address: socket.remoteAddress,
+                        port: socket.remotePort
+                    }, null, 'tcp');
+                }
+            });
+            
+            socket.on('end', () => {
+                logger.debug('NETWORK', 'TCP连接关闭', {
+                    remoteAddress: socket.remoteAddress,
+                    remotePort: socket.remotePort
+                });
+            });
+            
+            socket.on('error', (error) => {
+                logger.error('NETWORK', 'TCP连接错误', {
+                    error: error.message,
+                    remoteAddress: socket.remoteAddress
+                });
+            });
+        });
+        
+        // 启动TCP服务器，使用不同的端口
+        this.tcpPort = this.port + 1; // TCP端口比UDP端口大1
+        this.tcpServer.listen(this.tcpPort, () => {
+            logger.info('NETWORK', `开始监听TCP端口 ${this.tcpPort}`, {
+                port: this.tcpPort
+            });
+        });
+        
+        this.tcpServer.on('error', (error) => {
+            logger.error('NETWORK', 'TCP服务器错误', error);
+        });
+        
         // 启动设备超时检查
         this.startDeviceTimeoutCheck();
+        
+        // 启动DOS保护：每秒重置数据包计数
+        this.packetResetInterval = setInterval(() => {
+            this.recentPacketCount = 0;
+        }, 1000); // 每秒重置一次
     }
 
     /**
@@ -125,6 +191,17 @@ class LookupPackage {
             // 增加总接收数统计
             this.stats.totalReceived++;
             
+            // 限制处理速度，防止DOS攻击
+            if (this.recentPacketCount > 100) {
+                logger.warn('NETWORK', '数据包接收速率过高，暂时忽略', {
+                    remote: remote,
+                    protocol: protocol
+                });
+                return;
+            }
+            
+            this.recentPacketCount++;
+            
             // 解析数据包
             let packetData;
             try {
@@ -133,9 +210,11 @@ class LookupPackage {
                 logger.error('PARSER', '数据包解析失败', {
                     error: error.message,
                     remote: remote,
-                    protocol: protocol
+                    protocol: protocol,
+                    messageLength: message.length
                 });
                 this.stats.invalidPackages++;
+                this.stats.parseErrors++;
                 return;
             }
             
@@ -145,7 +224,8 @@ class LookupPackage {
             } else {
                 logger.warn('VALIDATOR', '数据包验证失败', {
                     remote: remote,
-                    protocol: protocol
+                    protocol: protocol,
+                    onlyID: packetData.header?.onlyID || 'unknown'
                 });
                 this.stats.invalidPackages++;
             }
@@ -586,13 +666,25 @@ class LookupPackage {
             this.udpSocket = null;
         }
         
+        // 关闭TCP服务器
+        if (this.tcpServer) {
+            this.tcpServer.close();
+            this.tcpServer = null;
+        }
+        
         // 停止设备超时检查
         if (this.deviceTimeoutInterval) {
             clearInterval(this.deviceTimeoutInterval);
             this.deviceTimeoutInterval = null;
         }
         
-        logger.info('SYSTEM', 'UDP广播监听已停止', null);
+        // 停止DOS保护定时器
+        if (this.packetResetInterval) {
+            clearInterval(this.packetResetInterval);
+            this.packetResetInterval = null;
+        }
+        
+        logger.info('SYSTEM', '数据包监听已停止（UDP和TCP）', null);
     }
 
     /**

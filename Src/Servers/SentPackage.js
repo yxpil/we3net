@@ -82,38 +82,97 @@ class SentPackage {
     }
     
     /**
-     * 初始化UDP socket
+     * 获取有效的广播地址列表
+     * @returns {Array} 广播地址列表
      */
-    initUDPSocket() {
-        if (this.udpSocket) {
-            return;
+    getBroadcastAddresses() {
+        const os = require('os');
+        const interfaces = os.networkInterfaces();
+        const broadcastAddresses = [];
+        
+        for (const iface in interfaces) {
+            interfaces[iface].forEach(ipInfo => {
+                if (ipInfo.family === 'IPv4' && !ipInfo.internal) {
+                    // 如果有广播地址，使用它
+                    if (ipInfo.broadcast) {
+                        broadcastAddresses.push(ipInfo.broadcast);
+                    } else {
+                        // 否则计算广播地址（简单实现：将最后一位改为255）
+                        const parts = ipInfo.address.split('.');
+                        if (parts.length === 4) {
+                            parts[3] = '255';
+                            broadcastAddresses.push(parts.join('.'));
+                        }
+                    }
+                }
+            });
         }
         
-        const dgram = require('dgram');
-        this.udpSocket = dgram.createSocket('udp4');
+        // 确保至少有一个广播地址（localhost用于测试）
+        if (broadcastAddresses.length === 0) {
+            broadcastAddresses.push('127.0.0.1');
+        }
         
-        // 监听来自其他设备的响应
-        this.udpSocket.on('message', (message, remote) => {
-            this.handleIncomingMessage(message, remote);
-        });
+        return broadcastAddresses;
+    }
+    
+    /**
+     * 初始化UDP socket
+     * @returns {Promise} 初始化完成的Promise
+     */
+    initUDPSocket() {
+        // 如果socket已经存在且正在初始化中，返回现有的Promise
+        if (this.udpInitPromise) {
+            return this.udpInitPromise;
+        }
         
-        this.udpSocket.on('error', (error) => {
-            logger.error('NETWORK', 'UDP socket错误', error);
-        });
+        // 如果socket已经存在且初始化完成，返回已解析的Promise
+        if (this.udpSocket && this.udpSocket.address()) {
+            return Promise.resolve();
+        }
         
-        // 绑定到随机端口以便接收响应
-        this.udpSocket.bind(() => {
-            try {
-                // 绑定成功后再允许广播
-                this.udpSocket.setBroadcast(true);
-                logger.debug('NETWORK', 'UDP socket已绑定并启用广播', {
-                    address: this.udpSocket.address().address,
-                    port: this.udpSocket.address().port
-                });
-            } catch (error) {
-                logger.error('NETWORK', '设置UDP广播失败', error);
+        // 创建新的Promise来跟踪初始化过程
+        this.udpInitPromise = new Promise((resolve) => {
+            if (this.udpSocket) {
+                // socket存在但可能没有绑定，关闭它
+                this.udpSocket.close();
             }
+            
+            const dgram = require('dgram');
+            this.udpSocket = dgram.createSocket('udp4');
+            
+            // 监听来自其他设备的响应
+            this.udpSocket.on('message', (message, remote) => {
+                this.handleIncomingMessage(message, remote);
+            });
+            
+            this.udpSocket.on('error', (error) => {
+                logger.error('NETWORK', 'UDP socket错误', error);
+            });
+            
+            // 绑定到随机端口以便接收响应
+            this.udpSocket.bind(() => {
+                try {
+                    // 绑定成功后再允许广播
+                    this.udpSocket.setBroadcast(true);
+                    
+                    // 获取所有广播地址
+                    this.broadcastAddresses = this.getBroadcastAddresses();
+                    logger.debug('NETWORK', 'UDP socket已绑定并启用广播', {
+                        address: this.udpSocket.address().address,
+                        port: this.udpSocket.address().port,
+                        broadcastAddresses: this.broadcastAddresses
+                    });
+                    
+                    resolve();
+                } catch (error) {
+                    logger.error('NETWORK', '设置UDP广播失败', error);
+                    resolve(); // 即使设置广播失败，也完成初始化
+                }
+            });
         });
+        
+        return this.udpInitPromise;
     }
     
     /**
@@ -465,33 +524,83 @@ class SentPackage {
      * @param {Object} options 发送选项
      * @returns {Promise<boolean>} 发送是否成功
      */
-    sendUDPPacket(data, options = {}) {
-        const { host = this.broadcastAddress, port = this.broadcastPort } = options;
+    async sendUDPPacket(data, options = {}) {
+        const { port = this.broadcastPort } = options;
         
-        return new Promise((resolve) => {
-            if (!this.udpSocket) {
-                this.initUDPSocket();
-            }
+        try {
+            // 确保UDP socket已完全初始化
+            await this.initUDPSocket();
             
             const message = Buffer.from(JSON.stringify(data));
             
-            this.udpSocket.send(message, port, host, (err) => {
-                if (err) {
-                    logger.error('NETWORK', '发送UDP广播失败', {
+            // 获取广播地址列表
+            const broadcastAddresses = this.broadcastAddresses || this.getBroadcastAddresses();
+            
+            logger.debug('NETWORK', 'UDP广播发送配置', {
+                addresses: broadcastAddresses,
+                port: port,
+                messageSize: message.length
+            });
+            
+            // 依次尝试向每个广播地址发送
+            let anySuccess = false;
+            
+            for (const host of broadcastAddresses) {
+                try {
+                    const success = await new Promise((resolve) => {
+                        this.udpSocket.send(message, port, host, (err) => {
+                            if (err) {
+                                logger.debug('NETWORK', '发送UDP广播到地址失败', {
+                                    error: err.message,
+                                    host: host,
+                                    port: port,
+                                    errno: err.errno,
+                                    syscall: err.syscall
+                                });
+                                resolve(false);
+                            } else {
+                                logger.debug('NETWORK', 'UDP广播到地址成功', {
+                                    host: host,
+                                    port: port
+                                });
+                                resolve(true);
+                            }
+                        });
+                    });
+                    
+                    if (success) {
+                        anySuccess = true;
+                    }
+                } catch (err) {
+                    logger.error('NETWORK', '发送UDP广播到地址异常', {
                         error: err.message,
                         host: host,
                         port: port
                     });
-                    resolve(false);
-                } else {
-                    logger.info('NETWORK', 'UDP广播发送成功', {
-                        host: host,
-                        port: port
-                    });
-                    resolve(true);
                 }
+            }
+            
+            if (anySuccess) {
+                logger.info('NETWORK', 'UDP广播发送成功', {
+                    addresses: broadcastAddresses,
+                    port: port
+                });
+                return true;
+            } else {
+                logger.error('NETWORK', 'UDP广播到所有地址都失败', {
+                    addresses: broadcastAddresses,
+                    port: port
+                });
+                return false;
+            }
+        } catch (error) {
+            logger.error('NETWORK', '发送UDP广播异常', {
+                error: error.message,
+                port: port,
+                stack: error.stack
             });
-        });
+            return false;
+        }
     }
     
     /**
@@ -501,31 +610,39 @@ class SentPackage {
      * @param {number} port 目标端口
      * @returns {Promise<boolean>} 发送是否成功
      */
-    sendUDPPacketDirect(data, host, port) {
-        return new Promise((resolve) => {
-            if (!this.udpSocket) {
-                this.initUDPSocket();
-            }
+    async sendUDPPacketDirect(data, host, port) {
+        try {
+            // 确保UDP socket已完全初始化
+            await this.initUDPSocket();
             
             const message = Buffer.from(JSON.stringify(data));
             
-            this.udpSocket.send(message, port, host, (err) => {
-                if (err) {
-                    logger.debug('NETWORK', '直接发送UDP数据包失败', {
-                        error: err.message,
-                        host: host,
-                        port: port
-                    });
-                    resolve(false);
-                } else {
-                    logger.debug('NETWORK', '直接UDP数据包发送成功', {
-                        host: host,
-                        port: port
-                    });
-                    resolve(true);
-                }
+            return new Promise((resolve) => {
+                this.udpSocket.send(message, port, host, (err) => {
+                    if (err) {
+                        logger.debug('NETWORK', '直接发送UDP数据包失败', {
+                            error: err.message,
+                            host: host,
+                            port: port
+                        });
+                        resolve(false);
+                    } else {
+                        logger.debug('NETWORK', '直接UDP数据包发送成功', {
+                            host: host,
+                            port: port
+                        });
+                        resolve(true);
+                    }
+                });
             });
-        });
+        } catch (error) {
+            logger.error('NETWORK', '直接发送UDP数据包异常', {
+                error: error.message,
+                host: host,
+                port: port
+            });
+            return false;
+        }
     }
     
     /**
@@ -598,10 +715,11 @@ class SentPackage {
     }
 
     /**
-     * 发送设备发现广播
+     * 发送设备发现广播（支持多协议自动回退）
+     * @param {Array<string>} preferredProtocols 首选协议列表
      * @returns {Promise<boolean>} 发送是否成功
      */
-    async discoverDevices() {
+    async discoverDevices(preferredProtocols = ['icmp', 'mdns', 'tcp-scan', 'udp']) {
         // 创建设备发现数据包
         const discoveryPacket = await this.createPackage({
             type: 'device-discovery',
@@ -610,10 +728,45 @@ class SentPackage {
         
         discoveryPacket.header.type = 'device-discovery';
         
-        logger.info('NETWORK', '发送设备发现广播', null);
+        logger.info('NETWORK', '开始设备发现', { protocols: preferredProtocols });
         
-        // 发送广播
-        return this.sendUDPPacket(discoveryPacket);
+        // 尝试每种协议，直到成功
+        for (const protocol of preferredProtocols) {
+            try {
+                logger.debug('NETWORK', `尝试使用${protocol}协议进行设备发现`, null);
+                
+                let success = false;
+                switch (protocol) {
+                    case 'icmp':
+                        success = await this.sendICMPDiscovery(discoveryPacket);
+                        break;
+                    case 'mdns':
+                        success = await this.sendMDNSDiscovery(discoveryPacket);
+                        break;
+                    case 'tcp-scan':
+                        success = await this.sendTCPScanDiscovery(discoveryPacket);
+                        break;
+                    case 'udp':
+                        success = await this.sendUDPPacket(discoveryPacket);
+                        break;
+                    default:
+                        logger.warn('NETWORK', `不支持的发现协议: ${protocol}`, null);
+                        continue;
+                }
+                
+                if (success) {
+                    logger.info('NETWORK', `${protocol}协议设备发现成功`, null);
+                    return true;
+                }
+            } catch (error) {
+                logger.error('NETWORK', `${protocol}协议设备发现失败`, {
+                    error: error.message
+                });
+            }
+        }
+        
+        logger.error('NETWORK', '所有协议的设备发现都失败', null);
+        return false;
     }
     
     /**
@@ -622,6 +775,260 @@ class SentPackage {
      */
     getDiscoveredDevices() {
         return Array.from(this.devices.values());
+    }
+    
+    /**
+     * 发送ICMP设备发现请求
+     * @param {Object} discoveryPacket 发现数据包
+     * @returns {Promise<boolean>} 发送是否成功
+     */
+    async sendICMPDiscovery(discoveryPacket) {
+        // 使用Node.js的child_process执行ping命令
+        const { exec } = require('child_process');
+        
+        return new Promise((resolve) => {
+            // 构建网络范围（简单实现：将最后一位改为1-254）
+            const os = require('os');
+            const interfaces = os.networkInterfaces();
+            const networkRanges = [];
+            
+            // 收集所有网络接口的网络范围
+            for (const iface in interfaces) {
+                interfaces[iface].forEach(ipInfo => {
+                    if (ipInfo.family === 'IPv4' && !ipInfo.internal) {
+                        const parts = ipInfo.address.split('.');
+                        if (parts.length === 4) {
+                            // 计算网络范围
+                            const networkRange = `${parts[0]}.${parts[1]}.${parts[2]}`;
+                            networkRanges.push(networkRange);
+                        }
+                    }
+                });
+            }
+            
+            if (networkRanges.length === 0) {
+                logger.warn('NETWORK', '无法确定网络范围，ICMP发现失败', null);
+                resolve(false);
+                return;
+            }
+            
+            // 对每个网络范围执行ping扫描
+            let totalSuccess = false;
+            
+            // 只扫描第一个网络范围（简单实现）
+            const networkRange = networkRanges[0];
+            
+            // 在Windows上使用ping命令
+            const pingCommand = process.platform === 'win32' 
+                ? `ping -n 1 -w 1000 ${networkRange}.255` 
+                : `ping -c 1 -W 1 ${networkRange}.255`;
+            
+            logger.debug('NETWORK', `执行ICMP广播: ${pingCommand}`, null);
+            
+            exec(pingCommand, (error, stdout, stderr) => {
+                if (error) {
+                    logger.error('NETWORK', 'ICMP广播执行失败', {
+                        error: error.message
+                    });
+                    
+                    // 在某些系统上，ping广播会返回错误代码，但实际上可能已发送
+                    // 检查是否有响应
+                    if (stdout.includes('Reply from')) {
+                        logger.debug('NETWORK', 'ICMP广播收到响应', null);
+                        totalSuccess = true;
+                    }
+                } else {
+                    logger.debug('NETWORK', 'ICMP广播执行成功', null);
+                    totalSuccess = true;
+                }
+                
+                // ICMP主要用于发现设备，然后使用TCP发送实际的发现数据包
+                if (totalSuccess) {
+                    // 发送TCP发现数据包到活跃的IP地址
+                    this.scanActiveIPs(networkRange, discoveryPacket);
+                }
+                
+                resolve(totalSuccess);
+            });
+        });
+    }
+    
+    /**
+     * 扫描活跃的IP地址并发送发现数据包
+     * @param {string} networkRange 网络范围（如192.168.1）
+     * @param {Object} discoveryPacket 发现数据包
+     */
+    async scanActiveIPs(networkRange, discoveryPacket) {
+        const { exec } = require('child_process');
+        
+        // 使用arp命令获取活跃设备列表
+        const arpCommand = process.platform === 'win32' 
+            ? 'arp -a' 
+            : 'arp -n';
+        
+        exec(arpCommand, (error, stdout, stderr) => {
+            if (error) {
+                logger.error('NETWORK', '获取ARP表失败', {
+                    error: error.message
+                });
+                return;
+            }
+            
+            // 解析ARP表，提取IP地址
+            const ipRegex = /(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/g;
+            const ips = [];
+            let match;
+            
+            while ((match = ipRegex.exec(stdout)) !== null) {
+                const ip = match[1];
+                if (!ips.includes(ip)) {
+                    ips.push(ip);
+                }
+            }
+            
+            logger.debug('NETWORK', `扫描到${ips.length}个活跃IP地址`, { ips: ips });
+            
+            // 向每个活跃IP发送TCP发现数据包
+            ips.forEach(ip => {
+                this.sendTCPPacketDirect(discoveryPacket, ip, this.broadcastPort)
+                    .catch(error => {
+                        logger.debug('NETWORK', `向${ip}发送TCP发现包失败`, {
+                            error: error.message
+                        });
+                    });
+            });
+        });
+    }
+    
+    /**
+     * 发送mDNS设备发现请求
+     * @param {Object} discoveryPacket 发现数据包
+     * @returns {Promise<boolean>} 发送是否成功
+     */
+    async sendMDNSDiscovery(discoveryPacket) {
+        // mDNS/ZeroConf发现实现
+        // 这里使用简化的DNS-SD实现
+        const dgram = require('dgram');
+        
+        return new Promise((resolve) => {
+            try {
+                const socket = dgram.createSocket('udp4');
+                
+                // 构建mDNS查询
+                const mdnsMessage = Buffer.from(JSON.stringify({
+                    type: 'mdns-query',
+                    service: '_yxpillow._tcp.local',
+                    discoveryData: discoveryPacket
+                }));
+                
+                // 发送到mDNS多播地址
+                socket.send(mdnsMessage, 5353, '224.0.0.251', (err) => {
+                    socket.close();
+                    
+                    if (err) {
+                        logger.error('NETWORK', 'mDNS发现发送失败', {
+                            error: err.message
+                        });
+                        resolve(false);
+                    } else {
+                        logger.debug('NETWORK', 'mDNS发现请求发送成功', null);
+                        resolve(true);
+                    }
+                });
+            } catch (error) {
+                logger.error('NETWORK', 'mDNS发现异常', {
+                    error: error.message
+                });
+                resolve(false);
+            }
+        });
+    }
+    
+    /**
+     * 发送TCP端口扫描设备发现请求
+     * @param {Object} discoveryPacket 发现数据包
+     * @returns {Promise<boolean>} 发送是否成功
+     */
+    async sendTCPScanDiscovery(discoveryPacket) {
+        const os = require('os');
+        const interfaces = os.networkInterfaces();
+        const networkRanges = [];
+        
+        // 收集所有网络接口的网络范围
+        for (const iface in interfaces) {
+            interfaces[iface].forEach(ipInfo => {
+                if (ipInfo.family === 'IPv4' && !ipInfo.internal) {
+                    const parts = ipInfo.address.split('.');
+                    if (parts.length === 4) {
+                        const networkRange = `${parts[0]}.${parts[1]}.${parts[2]}`;
+                        networkRanges.push(networkRange);
+                    }
+                }
+            });
+        }
+        
+        if (networkRanges.length === 0) {
+            logger.warn('NETWORK', '无法确定网络范围，TCP扫描发现失败', null);
+            return false;
+        }
+        
+        // 只扫描第一个网络范围（简单实现）
+        const networkRange = networkRanges[0];
+        
+        logger.debug('NETWORK', `开始TCP端口扫描: ${networkRange}.1-254:${this.broadcastPort}`, null);
+        
+        // 扫描前10个IP地址（简单实现）
+        let successCount = 0;
+        
+        for (let i = 1; i <= 10; i++) {
+            const ip = `${networkRange}.${i}`;
+            
+            try {
+                const success = await this.sendTCPPacketDirect(discoveryPacket, ip, this.broadcastPort);
+                if (success) {
+                    successCount++;
+                }
+            } catch (error) {
+                // 忽略单个IP的错误
+            }
+        }
+        
+        logger.debug('NETWORK', `TCP端口扫描完成，成功${successCount}个`, null);
+        return successCount > 0;
+    }
+    
+    /**
+     * 直接发送TCP数据包到特定设备
+     * @param {Object} data 要发送的数据
+     * @param {string} host 目标主机地址
+     * @param {number} port 目标端口
+     * @returns {Promise<boolean>} 发送是否成功
+     */
+    async sendTCPPacketDirect(data, host, port) {
+        const net = require('net');
+        
+        return new Promise((resolve) => {
+            const client = new net.Socket();
+            client.setTimeout(2000);
+            
+            client.connect(port, host, () => {
+                // 连接成功，发送数据
+                client.write(JSON.stringify(data));
+                client.end();
+                resolve(true);
+            });
+            
+            client.on('error', (error) => {
+                // 忽略连接错误
+                client.destroy();
+                resolve(false);
+            });
+            
+            client.on('timeout', () => {
+                client.destroy();
+                resolve(false);
+            });
+        });
     }
     
     /**

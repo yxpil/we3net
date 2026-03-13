@@ -11,14 +11,28 @@ class SystemInfo {
      * @returns {Object} 包含型号和序列号的对象
      */
     static async getMotherboardInfo() {
-        if (os.platform() === 'win32') {
-            return this.getMotherboardInfoWindows();
-        } else if (os.platform() === 'darwin') {
-            return this.getMotherboardInfoMac();
-        } else if (os.platform() === 'linux') {
-            return this.getMotherboardInfoLinux();
-        } else {
-            throw new Error(`不支持的操作系统: ${os.platform()}`);
+        try {
+            if (os.platform() === 'win32') {
+                return this.getMotherboardInfoWindows();
+            } else if (os.platform() === 'darwin') {
+                return this.getMotherboardInfoMac();
+            } else if (os.platform() === 'linux') {
+                return this.getMotherboardInfoLinux();
+            } else {
+                console.error(`不支持的操作系统: ${os.platform()}`);
+                return {
+                    manufacturer: 'Unknown',
+                    model: 'Unknown',
+                    serialNumber: 'Unknown'
+                };
+            }
+        } catch (error) {
+            console.error('获取主板信息失败:', error);
+            return {
+                manufacturer: 'Unknown',
+                model: 'Unknown',
+                serialNumber: 'Unknown'
+            };
         }
     }
 
@@ -28,10 +42,24 @@ class SystemInfo {
      */
     static getMotherboardInfoWindows() {
         try {
-            // 使用wmic命令获取主板信息
-            const manufacturer = execSync('wmic baseboard get manufacturer', { encoding: 'utf8' }).split('\n')[1]?.trim() || '';
-            const model = execSync('wmic baseboard get product', { encoding: 'utf8' }).split('\n')[1]?.trim() || '';
-            const serialNumber = execSync('wmic baseboard get serialnumber', { encoding: 'utf8' }).split('\n')[1]?.trim() || '';
+            // 使用wmic命令获取主板信息，重定向stderr到null避免控制台污染
+            const manufacturer = execSync('wmic baseboard get manufacturer', { 
+                encoding: 'utf8', 
+                timeout: 5000,
+                stdio: ['ignore', 'pipe', 'ignore'] // stdin: ignore, stdout: pipe, stderr: ignore
+            }).split('\n')[1]?.trim() || 'Unknown';
+            
+            const model = execSync('wmic baseboard get product', { 
+                encoding: 'utf8', 
+                timeout: 5000,
+                stdio: ['ignore', 'pipe', 'ignore']
+            }).split('\n')[1]?.trim() || 'Unknown';
+            
+            const serialNumber = execSync('wmic baseboard get serialnumber', { 
+                encoding: 'utf8', 
+                timeout: 5000,
+                stdio: ['ignore', 'pipe', 'ignore']
+            }).split('\n')[1]?.trim() || 'Unknown';
 
             return {
                 manufacturer,
@@ -39,7 +67,7 @@ class SystemInfo {
                 serialNumber
             };
         } catch (error) {
-            console.error('获取Windows主板信息失败:', error);
+            // 不输出详细错误信息，避免控制台污染
             return {
                 manufacturer: 'Unknown',
                 model: 'Unknown',

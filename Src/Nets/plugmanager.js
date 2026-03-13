@@ -30,7 +30,7 @@ const { logger } = require('../Tools/Logs.js');
 
 class PluginManager {
     constructor() {
-        this.pluginsDir = path.join(__dirname, '../Plugs');
+        this.pluginsDir = path.join(__dirname, '../../Plugs');
         this.pluginsConfigPath = path.join(__dirname, '../../Data/plugstartlist.ini');
         this.plugins = new Map(); // 存储插件信息
         this.loadedPlugins = new Map(); // 存储已加载的插件实例
@@ -51,15 +51,21 @@ class PluginManager {
 
             const items = fs.readdirSync(this.pluginsDir, { withFileTypes: true });
             
+            // 收集所有实际存在的插件名称
+            const existingPlugins = new Set();
+            
             items.forEach(item => {
                 if (item.isDirectory() && item.name !== 'node_modules') {
                     const pluginName = item.name;
+                    existingPlugins.add(pluginName);
+                    
                     const pluginPath = path.join(this.pluginsDir, pluginName);
                     
                     try {
                         // 检查是否存在必要的文件
                         const indexPath = path.join(pluginPath, 'index.html');
                         const mainPath = path.join(pluginPath, 'main.js');
+                        const infoPath = path.join(pluginPath, 'INFO');
                         
                         if (!fs.existsSync(indexPath) || !fs.existsSync(mainPath)) {
                             logger.warn('PLUGIN', `插件缺少必要文件: ${pluginName}`, { 
@@ -71,7 +77,16 @@ class PluginManager {
 
                         // 读取main.js获取插件信息
                         const mainContent = fs.readFileSync(mainPath, 'utf8');
-                        const pluginInfo = this.extractPluginInfo(mainContent, pluginName);
+                        const pluginInfoFromMain = this.extractPluginInfo(mainContent, pluginName);
+                        
+                        // 读取INFO文件获取插件信息（优先级更高）
+                        const pluginInfoFromFile = this.extractPluginInfoFromFile(infoPath, pluginName);
+                        
+                        // 合并信息，INFO文件中的信息优先级更高
+                        const pluginInfo = {
+                            ...pluginInfoFromMain,
+                            ...pluginInfoFromFile
+                        };
                         
                         // 合并配置文件中的信息
                         const configInfo = this.plugins.get(pluginName) || {};
@@ -81,11 +96,14 @@ class PluginManager {
                             path: pluginPath,
                             indexPath: indexPath,
                             mainPath: mainPath,
+                            infoPath: infoPath,
                             enabled: configInfo.enabled !== undefined ? configInfo.enabled : true,
                             autoStart: configInfo.autoStart !== undefined ? configInfo.autoStart : false,
                             description: pluginInfo.description || '暂无描述',
                             version: pluginInfo.version || '1.0.0',
                             author: pluginInfo.author || '未知作者',
+                            email: pluginInfo.email || '',
+                            website: pluginInfo.website || '',
                             status: 'stopped',
                             lastError: null,
                             startTime: null,
@@ -98,6 +116,23 @@ class PluginManager {
                     }
                 }
             });
+            
+            // 移除不再存在的插件
+            const removedPlugins = [];
+            for (const [pluginName] of this.plugins) {
+                if (!existingPlugins.has(pluginName)) {
+                    this.plugins.delete(pluginName);
+                    this.loadedPlugins.delete(pluginName);
+                    removedPlugins.push(pluginName);
+                }
+            }
+            
+            if (removedPlugins.length > 0) {
+                logger.info('PLUGIN', '移除不存在的插件', { plugins: removedPlugins });
+            }
+            
+            // 扫描完成后自动同步配置文件
+            this.synchronizeConfig();
             
             logger.info('PLUGIN', '插件扫描完成', { count: this.plugins.size });
         } catch (error) {
@@ -145,6 +180,104 @@ class PluginManager {
             }
         }
 
+        return info;
+    }
+    
+    /**
+     * 从插件INFO文件中提取信息
+     */
+    extractPluginInfoFromFile(infoPath, pluginName) {
+        const info = {
+            description: '暂无描述',
+            version: '1.0.0',
+            author: '未知作者'
+        };
+        
+        try {
+            if (!fs.existsSync(infoPath)) {
+                return info;
+            }
+            
+            const content = fs.readFileSync(infoPath, 'utf8');
+            const lines = content.split('\n');
+            
+            // 状态标记
+            let inPluginInfo = false;
+            
+            for (let line of lines) {
+                line = line.trim();
+                
+                // 检查是否进入插件信息部分
+                if (line.includes('## 插件基本信息') || line.includes('# 插件基本信息')) {
+                    inPluginInfo = true;
+                    continue;
+                }
+                
+                // 如果不是插件信息部分，跳过
+                if (!inPluginInfo) {
+                    continue;
+                }
+                
+                // 提取名称（可选）
+                if (line.includes('**插件名称**') || line.includes('**插件名称**:') || line.includes('插件名称:')) {
+                    const nameMatch = line.match(/[:：]\s*(.+)/);
+                    if (nameMatch) {
+                        info.name = nameMatch[1].trim();
+                    }
+                }
+                
+                // 提取版本
+                if (line.includes('**版本**') || line.includes('**版本**:') || line.includes('版本:')) {
+                    const verMatch = line.match(/[:：]\s*(.+)/);
+                    if (verMatch) {
+                        info.version = verMatch[1].trim();
+                    }
+                }
+                
+                // 提取作者
+                if (line.includes('**作者**') || line.includes('**作者**:') || line.includes('作者:')) {
+                    const authMatch = line.match(/[:：]\s*(.+)/);
+                    if (authMatch) {
+                        info.author = authMatch[1].trim();
+                    }
+                }
+                
+                // 提取邮箱
+                if (line.includes('**邮箱**') || line.includes('**邮箱**:') || line.includes('邮箱:')) {
+                    const emailMatch = line.match(/[:：]\s*(.+)/);
+                    if (emailMatch) {
+                        info.email = emailMatch[1].trim();
+                    }
+                }
+                
+                // 提取网站
+                if (line.includes('**网站**') || line.includes('**网站**:') || line.includes('网站:')) {
+                    const websiteMatch = line.match(/[:：]\s*(.+)/);
+                    if (websiteMatch) {
+                        info.website = websiteMatch[1].trim();
+                    }
+                }
+                
+                // 检查是否离开插件信息部分
+                if (line.startsWith('## ') && !line.includes('插件基本信息')) {
+                    inPluginInfo = false;
+                }
+            }
+            
+            // 尝试从描述部分提取描述
+            if (content.includes('## 插件描述')) {
+                const descMatch = content.match(/## 插件描述[\s\S]*?## /);
+                if (descMatch) {
+                    let desc = descMatch[0].replace('## 插件描述', '').replace('## ', '').trim();
+                    // 只保留前200个字符作为描述
+                    info.description = desc.length > 200 ? desc.substring(0, 200) + '...' : desc;
+                }
+            }
+            
+        } catch (error) {
+            logger.error('PLUGIN', `解析INFO文件失败: ${pluginName}`, error);
+        }
+        
         return info;
     }
 
@@ -206,6 +339,7 @@ class PluginManager {
      */
     savePluginsConfig(config = null) {
         try {
+            // 只保存当前实际存在的插件配置
             const configToSave = config || this.getPluginsConfig();
             let content = '# 插件启动列表配置文件\n';
             content += '# 此文件控制插件的启用状态和自动启动设置\n\n';
@@ -242,6 +376,99 @@ class PluginManager {
             };
         }
         return config;
+    }
+    
+    /**
+     * 同步插件目录与配置文件
+     * 根据实际插件目录自动更新配置文件
+     */
+    synchronizeConfig() {
+        try {
+            // 获取当前配置文件内容
+            let currentConfig = {};
+            if (fs.existsSync(this.pluginsConfigPath)) {
+                const content = fs.readFileSync(this.pluginsConfigPath, 'utf8');
+                currentConfig = this.parseINI(content);
+            }
+            
+            // 获取当前扫描到的插件列表
+            const scannedPlugins = [];
+            this.plugins.forEach((pluginInfo, pluginName) => {
+                scannedPlugins.push(pluginName);
+            });
+            
+            // 获取配置文件中的插件列表
+            const configPlugins = Object.keys(currentConfig);
+            
+            // 检查是否需要更新配置
+            let configChanged = false;
+            const newConfig = {};
+            
+            // 处理已存在的插件配置
+            scannedPlugins.forEach(pluginName => {
+                const plugin = this.plugins.get(pluginName);
+                if (plugin) {
+                    // 如果配置文件中已经有该插件，保留原有的enabled和autoStart设置
+                    // 但更新其他信息（description, version, author等）
+                    const existingConfig = currentConfig[pluginName] || {};
+                    newConfig[pluginName] = {
+                        enabled: existingConfig.enabled || (plugin.enabled ? 'true' : 'false'),
+                        autoStart: existingConfig.autoStart || (plugin.autoStart ? 'true' : 'false'),
+                        description: plugin.description,
+                        version: plugin.version,
+                        author: plugin.author
+                    };
+                    
+                    // 检查是否有变化
+                    if (!currentConfig[pluginName] || 
+                        currentConfig[pluginName].description !== plugin.description ||
+                        currentConfig[pluginName].version !== plugin.version ||
+                        currentConfig[pluginName].author !== plugin.author) {
+                        configChanged = true;
+                    }
+                }
+            });
+            
+            // 检查是否有配置文件中的插件但实际目录中不存在
+            const removedPlugins = configPlugins.filter(pluginName => 
+                !scannedPlugins.includes(pluginName)
+            );
+            
+            if (removedPlugins.length > 0) {
+                configChanged = true;
+                logger.info('PLUGIN', '移除配置文件中不存在的插件', { plugins: removedPlugins });
+            }
+            
+            // 检查新配置与原配置是否完全相同
+            if (!configChanged && Object.keys(newConfig).length === Object.keys(currentConfig).length) {
+                const allMatch = Object.keys(newConfig).every(pluginName => {
+                    const newPlugin = newConfig[pluginName];
+                    const oldPlugin = currentConfig[pluginName];
+                    return oldPlugin &&
+                           newPlugin.enabled === oldPlugin.enabled &&
+                           newPlugin.autoStart === oldPlugin.autoStart &&
+                           newPlugin.description === oldPlugin.description &&
+                           newPlugin.version === oldPlugin.version &&
+                           newPlugin.author === oldPlugin.author;
+                });
+                
+                if (!allMatch) {
+                    configChanged = true;
+                }
+            }
+            
+            // 如果配置有变化，保存新配置（只包含当前存在的插件）
+            if (configChanged) {
+                this.savePluginsConfig(newConfig);
+                logger.info('PLUGIN', '配置文件自动更新完成', {
+                    addedOrUpdated: scannedPlugins.length,
+                    removed: removedPlugins.length
+                });
+            }
+            
+        } catch (error) {
+            logger.error('PLUGIN', '配置文件同步失败', error);
+        }
     }
 
     /**
