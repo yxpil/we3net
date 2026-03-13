@@ -1,0 +1,99 @@
+# FromLike示例文件 - 定义表格结构
+# 格式：[表名]
+#       列名: 类型 [约束]
+
+[users]
+id: INTEGER PRIMARY KEY AUTOINCREMENT
+user_id: TEXT UNIQUE NOT NULL
+username: TEXT NOT NULL
+password: TEXT NOT NULL
+email: TEXT UNIQUE
+created_at: DATETIME DEFAULT CURRENT_TIMESTAMP
+updated_at: DATETIME DEFAULT CURRENT_TIMESTAMP
+INDEX idx_users_user_id ON (user_id)
+UNIQUE INDEX idx_users_email ON (email)
+
+[friends]
+id: INTEGER PRIMARY KEY AUTOINCREMENT
+friend_id: TEXT UNIQUE NOT NULL
+user_id: TEXT NOT NULL
+friend_name: TEXT NOT NULL
+friend_ipv4: TEXT
+friend_ipv6: TEXT NOT NULL
+friend_avatar: TEXT
+status: TEXT DEFAULT "offline"
+created_at: DATETIME DEFAULT CURRENT_TIMESTAMP
+INDEX idx_friends_user_id ON (user_id)
+
+[messages]
+id: INTEGER PRIMARY KEY AUTOINCREMENT
+message_id: TEXT UNIQUE NOT NULL
+sender_id: TEXT NOT NULL
+receiver_id: TEXT NOT NULL
+content: TEXT NOT NULL
+type: TEXT DEFAULT "text"
+status: TEXT DEFAULT "sent"
+timestamp: DATETIME DEFAULT CURRENT_TIMESTAMP
+INDEX idx_messages_sender_receiver ON (sender_id, receiver_id)
+
+# 遥测服务器名单
+[telemetry_servers]
+id: INTEGER PRIMARY KEY AUTOINCREMENT
+server_id: TEXT UNIQUE NOT NULL
+server_name: TEXT NOT NULL
+server_address: TEXT NOT NULL
+server_port: INTEGER NOT NULL
+protocol: TEXT DEFAULT "HTTPS"
+enabled: INTEGER DEFAULT 1
+created_at: DATETIME DEFAULT CURRENT_TIMESTAMP
+updated_at: DATETIME DEFAULT CURRENT_TIMESTAMP
+INDEX idx_telemetry_server_id ON (server_id)
+INDEX idx_telemetry_enabled ON (enabled)
+
+# 跨域配置
+[cors_config]
+id: INTEGER PRIMARY KEY AUTOINCREMENT
+domain: TEXT UNIQUE NOT NULL
+allowed_origins: TEXT NOT NULL
+allowed_methods: TEXT DEFAULT "GET,POST,PUT,DELETE,OPTIONS"
+allowed_headers: TEXT DEFAULT "*"
+max_age: INTEGER DEFAULT 86400
+created_at: DATETIME DEFAULT CURRENT_TIMESTAMP
+updated_at: DATETIME DEFAULT CURRENT_TIMESTAMP
+INDEX idx_cors_domain ON (domain)
+
+# 辅助服务器名单 - 用户手动添加后可以通过唯一id找到好友更新的ipv6地址、ddns
+[auxiliary_servers]
+id: INTEGER PRIMARY KEY AUTOINCREMENT
+server_id: TEXT UNIQUE NOT NULL
+server_name: TEXT NOT NULL
+server_address: TEXT NOT NULL
+server_port: INTEGER NOT NULL
+protocol: TEXT DEFAULT "HTTP"
+description: TEXT
+user_defined: INTEGER DEFAULT 1
+ddns_supported: INTEGER DEFAULT 0
+status: TEXT DEFAULT "active"
+created_at: DATETIME DEFAULT CURRENT_TIMESTAMP
+updated_at: DATETIME DEFAULT CURRENT_TIMESTAMP
+INDEX idx_auxiliary_server_id ON (server_id)
+INDEX idx_auxiliary_user_defined ON (user_defined)
+INDEX idx_auxiliary_status ON (status)
+
+# 账号密码 - 允许用户使用云服务器获取配置信息
+[accounts]
+id: INTEGER PRIMARY KEY AUTOINCREMENT
+account_id: TEXT UNIQUE NOT NULL
+username: TEXT NOT NULL
+password_hash: TEXT NOT NULL
+salt: TEXT NOT NULL
+email: TEXT UNIQUE
+phone: TEXT
+last_login: DATETIME
+status: TEXT DEFAULT "active"
+created_at: DATETIME DEFAULT CURRENT_TIMESTAMP
+updated_at: DATETIME DEFAULT CURRENT_TIMESTAMP
+INDEX idx_accounts_account_id ON (account_id)
+INDEX idx_accounts_username ON (username)
+UNIQUE INDEX idx_accounts_email ON (email)
+UNIQUE INDEX idx_accounts_phone ON (phone)
